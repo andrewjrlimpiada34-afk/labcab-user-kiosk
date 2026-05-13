@@ -135,7 +135,7 @@ export default function Home() {
         
         <div className="flex items-center gap-8">
           <span>v1.0.5-production</span>
-          <span className="text-white/40 italic">Managed via Firebase Console</span>
+          <span className="text-white/40 italic">A Cabinet that knows what&apos;s Inside!</span>
         </div>
       </footer>
     </div>

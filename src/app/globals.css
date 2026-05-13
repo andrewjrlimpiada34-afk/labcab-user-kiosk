@@ -5,15 +5,15 @@
 
 @layer base {
   :root {
-    --background: 220 33% 97%; /* Surgical White #F5F7FB */
+    --background: 220 33% 97%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 231 61% 45%; /* Clinical Navy #2D46B9 */
+    --primary: 231 61% 45%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 182 61% 45%; /* Bright Oxygen Blue #2DB2B9 */
+    --secondary: 182 61% 45%;
     --secondary-foreground: 210 40% 98%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -25,29 +25,64 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 231 61% 45%;
     --radius: 1rem;
-    --chart-1: 33 100% 50%; /* Gradient Orange Start */
-    --chart-2: 38 100% 50%; /* Gradient Orange End */
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+  * { @apply border-border; }
   body {
-    @apply bg-background text-foreground font-body antialiased selection:bg-primary/20;
+    @apply bg-background text-foreground font-body antialiased selection:bg-primary/20 overflow-hidden h-screen w-screen;
     -webkit-tap-highlight-color: transparent;
   }
 }
 
-.kiosk-btn {
-  @apply h-24 text-xl font-semibold transition-all duration-200 active:scale-95 flex items-center justify-center gap-4 rounded-2xl shadow-lg;
+.kiosk-page {
+  @apply fixed inset-0 flex flex-col overflow-hidden bg-background;
 }
 
-.glass-card {
-  @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl;
+.ripple {
+  position: relative;
+  overflow: hidden;
 }
 
-.orange-gradient {
-  background: linear-gradient(135deg, #FF8C00 0%, #FFA500 100%);
+.ripple::after {
+  content: "";
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transform: scale(10, 10);
+  opacity: 0;
+  transition: transform 0.5s, opacity 1s;
 }
+
+.ripple:active::after {
+  transform: scale(0, 0);
+  opacity: 0.3;
+  transition: 0s;
+}
+
+/* Onscreen Keyboard Styles */
+.hg-theme-default {
+  @apply bg-slate-200 p-2 shadow-2xl border-t border-slate-300 !important;
+}
+
+.hg-theme-default .hg-button {
+  @apply h-14 text-xl font-bold rounded-lg border-b-4 border-slate-400 active:border-b-0 active:translate-y-1 bg-white !important;
+}
+
+.hg-theme-default .hg-button.hg-activeButton {
+  @apply bg-slate-100 !important;
+}
+
+/* Custom transitions */
+.page-transition-enter { opacity: 0; transform: translateY(20px); }
+.page-transition-enter-active { opacity: 1; transform: translateY(0); transition: opacity 300ms, transform 300ms; }
+.page-transition-exit { opacity: 1; transform: translateY(0); }
+.page-transition-exit-active { opacity: 0; transform: translateY(-20px); transition: opacity 300ms, transform 300ms; }

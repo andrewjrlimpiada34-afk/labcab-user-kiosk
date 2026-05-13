@@ -1,0 +1,78 @@
+
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Information for students and teachers registered in the system.",
+      "type": "object",
+      "properties": {
+        "firstName": { "type": "string" },
+        "mi": { "type": "string" },
+        "lastName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["student", "teacher"] },
+        "course": { "type": "string", "description": "Applicable to students only" },
+        "studentId": { "type": "string", "description": "Exactly 7 uppercase characters" },
+        "qrCode": { "type": "string", "description": "Unique identifier scanned from physical QR" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["firstName", "lastName", "email", "role", "qrCode"]
+    },
+    "Apparatus": {
+      "title": "Laboratory Apparatus",
+      "description": "Equipment available for borrowing.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "stock": { "type": "number" },
+        "total": { "type": "number" },
+        "icon": { "type": "string" },
+        "imageUrl": { "type": "string" }
+      },
+      "required": ["name", "stock", "total"]
+    },
+    "Transaction": {
+      "title": "Borrow Transaction",
+      "description": "Records of borrowed equipment.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "itemId": { "type": "string" },
+              "name": { "type": "string" },
+              "quantity": { "type": "number" }
+            }
+          }
+        },
+        "status": { "type": "string", "enum": ["active", "returned"] },
+        "borrowTime": { "type": "string", "format": "date-time" },
+        "deadline": { "type": "string", "format": "date-time" },
+        "returnTime": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "items", "status", "borrowTime", "deadline"]
+    }
+  },
+  "auth": {
+    "providers": ["password"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents"
+    },
+    "/apparatus/{apparatusId}": {
+      "schema": "Apparatus",
+      "description": "Inventory of laboratory equipment"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Borrowing records"
+    }
+  }
+}

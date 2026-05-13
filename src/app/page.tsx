@@ -4,97 +4,130 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { QrCode, LogIn, Microscope, UserPlus } from 'lucide-react';
-import Image from 'next/image';
+import { Microscope, UserPlus, ShoppingBag, RotateCcw, Clock, Settings } from 'lucide-react';
+import { format } from 'date-fns';
+import { motion } from 'framer-motion';
 
 export default function Home() {
-  const [showSplash, setShowSplash] = useState(true);
   const router = useRouter();
+  const [time, setTime] = useState(new Date());
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowSplash(false), 2500);
-    return () => clearTimeout(timer);
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
   }, []);
 
-  if (showSplash) {
-    return (
-      <div className="fixed inset-0 bg-primary flex flex-col items-center justify-center z-50 overflow-hidden">
-        <div className="relative animate-pulse-slow">
-           <div className="w-32 h-32 bg-secondary rounded-3xl flex items-center justify-center mb-6 shadow-2xl rotate-12">
-             <Microscope className="w-20 h-20 text-white" />
-           </div>
-        </div>
-        <h1 className="text-6xl font-bold text-white tracking-tight animate-fade-in">
-          Lab<span className="text-secondary">Cab</span>
-        </h1>
-        <p className="text-white/60 mt-4 text-xl font-light animate-fade-in delay-200">
-          Smart Laboratory Cabinet System
-        </p>
-        <div className="absolute bottom-12 w-1 bg-white/10 h-24 rounded-full overflow-hidden">
-          <div className="w-full bg-secondary h-full animate-bounce duration-1000 origin-bottom" />
-        </div>
-      </div>
-    );
-  }
+  const menuButtons = [
+    { 
+      label: 'Register', 
+      icon: UserPlus, 
+      color: 'bg-orange-500', 
+      path: '/register',
+      desc: 'Create new account'
+    },
+    { 
+      label: 'Borrow', 
+      icon: ShoppingBag, 
+      color: 'bg-primary', 
+      path: '/borrow',
+      desc: 'Take equipment out'
+    },
+    { 
+      label: 'Return', 
+      icon: RotateCcw, 
+      color: 'bg-secondary', 
+      path: '/return',
+      desc: 'Check in apparatus'
+    }
+  ];
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-6 space-y-12 max-w-7xl mx-auto">
-      <header className="text-center space-y-4">
-        <div className="flex items-center justify-center gap-3 mb-2">
-           <div className="p-2 bg-primary rounded-xl">
-             <Microscope className="w-8 h-8 text-white" />
-           </div>
-           <h1 className="text-4xl font-bold text-primary">LabCab</h1>
+    <div className="kiosk-page">
+      {/* Top Navbar */}
+      <nav className="h-24 bg-white border-b px-12 flex items-center justify-between shadow-sm z-10">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center text-white">
+            <Microscope className="w-10 h-10" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-black text-primary tracking-tighter leading-none">LabCab</h1>
+            <p className="text-slate-400 font-medium text-sm">Smart Laboratory Cabinet</p>
+          </div>
         </div>
-        <h2 className="text-5xl md:text-7xl font-bold text-slate-900 tracking-tight">
-          Welcome to the Lab.
-        </h2>
-        <p className="text-xl text-slate-500 max-w-2xl mx-auto">
-          Securely borrow and manage laboratory equipment with instant QR access or credentials.
-        </p>
-      </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-5xl">
-        <Card className="group p-8 flex flex-col items-center justify-center text-center space-y-6 hover:border-secondary transition-all cursor-pointer shadow-xl h-80" onClick={() => router.push('/auth/qr')}>
-          <div className="w-24 h-24 rounded-full bg-accent flex items-center justify-center group-hover:scale-110 transition-transform">
-            <QrCode className="w-12 h-12 text-secondary" />
+        <div className="text-right">
+          <div className="flex items-center gap-3 text-2xl font-bold text-slate-700">
+            <Clock className="w-6 h-6 text-primary" />
+            <span>{format(time, 'hh:mm:ss a')}</span>
           </div>
-          <div>
-            <h3 className="text-2xl font-bold text-slate-900">Scan QR Code</h3>
-            <p className="text-slate-500 mt-2">Instant cabinet unlock</p>
-          </div>
-          <Button variant="secondary" className="w-full h-14 text-lg font-bold rounded-xl shadow-lg">SCAN NOW</Button>
-        </Card>
+          <p className="text-slate-400 font-semibold">{format(time, 'EEEE, MMMM do yyyy')}</p>
+        </div>
+      </nav>
 
-        <Card className="group p-8 flex flex-col items-center justify-center text-center space-y-6 hover:border-primary transition-all cursor-pointer shadow-xl h-80" onClick={() => router.push('/auth/login')}>
-          <div className="w-24 h-24 rounded-full bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <LogIn className="w-12 h-12 text-primary" />
-          </div>
-          <div>
-            <h3 className="text-2xl font-bold text-slate-900">Manual Login</h3>
-            <p className="text-slate-500 mt-2">Access using ID & PIN</p>
-          </div>
-          <Button variant="default" className="w-full h-14 text-lg font-bold rounded-xl shadow-lg">LOGIN</Button>
-        </Card>
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-16">
+        <div className="space-y-4">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-7xl font-black text-slate-900 tracking-tight"
+          >
+            Welcome to LabCab
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-2xl text-slate-500 max-w-3xl mx-auto"
+          >
+            Smart Laboratory Cabinet for Borrowing and Returning Laboratory Apparatus
+          </motion.p>
+        </div>
 
-        <Card className="group p-8 flex flex-col items-center justify-center text-center space-y-6 hover:border-orange-400 transition-all cursor-pointer shadow-xl h-80 md:col-span-2 lg:col-span-1" onClick={() => router.push('/enroll')}>
-          <div className="w-24 h-24 rounded-full bg-orange-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <UserPlus className="w-12 h-12 text-orange-500" />
-          </div>
-          <div>
-            <h3 className="text-2xl font-bold text-slate-900">New Enrollment</h3>
-            <p className="text-slate-500 mt-2">Register student or faculty</p>
-          </div>
-          <Button variant="outline" className="w-full h-14 text-lg font-bold rounded-xl border-2 hover:bg-orange-50">ENROLL</Button>
-        </Card>
-      </div>
+        <div className="grid grid-cols-3 gap-10 w-full max-w-6xl">
+          {menuButtons.map((btn, i) => (
+            <motion.div
+              key={btn.label}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 + (i * 0.1) }}
+            >
+              <Button
+                className={`w-full h-80 rounded-[2.5rem] flex flex-col gap-6 text-white shadow-2xl transition-all active:scale-95 ripple ${btn.color} hover:brightness-110 border-none`}
+                onClick={() => router.push(btn.path)}
+              >
+                <btn.icon className="w-24 h-24 mb-2" />
+                <div className="space-y-1">
+                  <span className="text-4xl font-black tracking-tight">{btn.label.toUpperCase()}</span>
+                  <p className="text-white/70 text-lg font-medium">{btn.desc}</p>
+                </div>
+              </Button>
+            </motion.div>
+          ))}
+        </div>
+      </main>
 
-      <footer className="mt-12 text-slate-400 text-sm flex items-center gap-4">
-        <span>© 2024 LabCab Smart Systems</span>
-        <span className="w-1 h-1 bg-slate-400 rounded-full" />
-        <button onClick={() => router.push('/admin')} className="hover:text-primary transition-colors">Admin Dashboard</button>
+      {/* Bottom Status Bar */}
+      <footer className="h-16 bg-slate-900 text-white/60 px-12 flex items-center justify-between text-lg font-medium">
+        <div className="flex gap-8">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full" />
+            <span>Active Borrows: 12</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-orange-500 rounded-full" />
+            <span>Overdue Items: 2</span>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-8">
+          <span>v1.0.4-production</span>
+          <div className="flex items-center gap-2">
+            <Settings className="w-5 h-5" />
+            <span>Raspberry Pi Kiosk</span>
+          </div>
+        </div>
       </footer>
-    </main>
+    </div>
   );
 }

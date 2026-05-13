@@ -13,7 +13,7 @@ import { KioskKeyboard } from '@/components/kiosk/KioskKeyboard';
 import { QrScannerModal } from '@/components/kiosk/QrScannerModal';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useAuth } from '@/firebase';
-import { collection, updateDoc, doc, query, where, getDocs, limit, serverTimestamp } from 'firebase/firestore';
+import { collection, updateDoc, doc, query, where, getDocs, limit, serverTimestamp, getDoc } from 'firebase/firestore';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function ReturnPage() {
@@ -31,58 +31,77 @@ export default function ReturnPage() {
   const [pin, setPin] = useState('');
   const [activeField, setActiveField] = useState<'email' | 'pin' | null>(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   const handleAuth = async () => {
-    if (!auth || !db) return;
+    if (!auth || !db || isAuthenticating) return;
+    setIsAuthenticating(true);
+    
     try {
       if (!email.toLowerCase().endsWith('@marsu.edu.ph')) {
         toast({ variant: "destructive", title: "Invalid Email", description: "Use institutional email (@marsu.edu.ph)." });
+        setIsAuthenticating(false);
         return;
       }
 
       const userCredential = await signInWithEmailAndPassword(auth, email, pin);
-      const userQuery = query(collection(db, 'users'), where('email', '==', email), limit(1));
-      const userSnap = await getDocs(userQuery);
+      const userDocRef = doc(db, 'users', userCredential.user.uid);
+      const userSnap = await getDoc(userDocRef);
       
-      if (!userSnap.empty) {
-        const userData = userSnap.docs[0].data();
-        setUser({ id: userCredential.user.uid, ...userData });
-        fetchActiveTransactions(userCredential.user.uid);
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        setUser({ id: userSnap.id, ...userData });
+        fetchActiveTransactions(userSnap.id);
       } else {
         toast({ variant: "destructive", title: "Error", description: "User profile not found." });
       }
     } catch (e: any) {
       toast({ variant: "destructive", title: "Auth Failed", description: "Invalid credentials." });
+    } finally {
+      setIsAuthenticating(false);
     }
   };
 
   const handleQrScan = async (code: string) => {
-    if (!db) return;
-    const cleanCode = code.trim().toUpperCase();
-    const userQuery = query(collection(db, 'users'), where('qrCode', '==', cleanCode), limit(1));
-    const userSnap = await getDocs(userQuery);
+    if (!db || isAuthenticating) return;
+    setIsAuthenticating(true);
     
-    if (!userSnap.empty) {
-      const userData = userSnap.docs[0].data();
-      setUser({ id: userSnap.docs[0].id, ...userData });
-      fetchActiveTransactions(userSnap.docs[0].id);
-      toast({ title: "Authenticated", description: `Welcome back, ${userData.firstName}` });
-    } else {
-      toast({ variant: "destructive", title: "Not Found", description: "Account not recognized." });
+    try {
+      const cleanCode = code.trim().toUpperCase();
+      const userQuery = query(collection(db, 'users'), where('qrCode', '==', cleanCode), limit(1));
+      const userSnap = await getDocs(userQuery);
+      
+      if (!userSnap.empty) {
+        const userData = userSnap.docs[0].data();
+        setUser({ id: userSnap.docs[0].id, ...userData });
+        fetchActiveTransactions(userSnap.docs[0].id);
+        toast({ title: "Authenticated", description: `Welcome back, ${userData.firstName}` });
+      } else {
+        toast({ variant: "destructive", title: "Not Found", description: "Account not recognized." });
+      }
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Scan Failed", description: "Could not verify QR code." });
+    } finally {
+      setIsAuthenticating(false);
     }
   };
 
   const fetchActiveTransactions = async (userId: string) => {
     if (!db) return;
-    const q = query(collection(db, 'transactions'), where('userId', '==', userId), where('status', '==', 'active'));
-    const snap = await getDocs(q);
-    const txs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    setTransactions(txs);
-    if (txs.length === 0) {
-      toast({ title: "No Borrows", description: "You have no active borrowings to return." });
-      router.push('/');
-    } else {
-      setStep('active');
+    try {
+      const q = query(collection(db, 'transactions'), where('userId', '==', userId), where('status', '==', 'active'));
+      const snap = await getDocs(q);
+      const txs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setTransactions(txs);
+      
+      if (txs.length === 0) {
+        toast({ title: "No Borrows", description: "You have no active borrowings to return." });
+        setTimeout(() => router.push('/'), 2000);
+      } else {
+        setStep('active');
+      }
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to fetch transactions." });
     }
   };
 
@@ -97,10 +116,9 @@ export default function ReturnPage() {
 
       for (const item of selectedTransaction.items) {
         const itemRef = doc(db, 'apparatus', item.itemId);
-        const q = query(collection(db, 'apparatus'), where('__name__', '==', item.itemId));
-        const apparatusSnap = await getDocs(q);
-        if (!apparatusSnap.empty) {
-          const currentStock = apparatusSnap.docs[0].data().stock;
+        const apparatusSnap = await getDoc(itemRef);
+        if (apparatusSnap.exists()) {
+          const currentStock = apparatusSnap.data().stock || 0;
           await updateDoc(itemRef, { stock: currentStock + item.quantity });
         }
       }
@@ -143,8 +161,9 @@ export default function ReturnPage() {
                   <Button 
                     className="w-full h-24 text-2xl font-black rounded-3xl blue-gradient text-white border-none mt-auto shadow-lg" 
                     onClick={() => setIsScannerOpen(true)}
+                    disabled={isAuthenticating}
                   >
-                    START SCANNING
+                    {isAuthenticating ? 'VERIFYING...' : 'START SCANNING'}
                   </Button>
                 </div>
               </div>
@@ -164,31 +183,29 @@ export default function ReturnPage() {
                   <div className="space-y-4 flex-1">
                     <div className="space-y-2">
                       <Label className="text-lg font-bold">Institutional Email</Label>
-                      <Input 
-                        placeholder="user@marsu.edu.ph" 
-                        className="h-16 text-xl rounded-2xl bg-slate-50" 
-                        value={email} 
-                        onFocus={() => setActiveField('email')} 
-                        readOnly 
-                      />
+                      <div 
+                        className={`h-16 text-xl rounded-2xl bg-slate-50 border-2 flex items-center px-4 cursor-pointer transition-all ${activeField === 'email' ? 'border-primary ring-2 ring-primary/10' : 'border-transparent'}`}
+                        onClick={() => setActiveField('email')}
+                      >
+                        {email || <span className="text-slate-400">user@marsu.edu.ph</span>}
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-lg font-bold">6-Digit PIN</Label>
-                      <Input 
-                        type="password" 
-                        placeholder="••••••" 
-                        className="h-16 text-3xl rounded-2xl bg-slate-50 text-center tracking-widest font-black" 
-                        value={pin} 
-                        onFocus={() => setActiveField('pin')} 
-                        readOnly 
-                      />
+                      <div 
+                        className={`h-16 text-3xl rounded-2xl bg-slate-50 border-2 flex items-center justify-center cursor-pointer transition-all tracking-widest font-black ${activeField === 'pin' ? 'border-primary ring-2 ring-primary/10' : 'border-transparent'}`}
+                        onClick={() => setActiveField('pin')}
+                      >
+                        {'•'.repeat(pin.length) || <span className="text-slate-400 text-xl tracking-normal">••••••</span>}
+                      </div>
                     </div>
                   </div>
                   <Button 
                     className="w-full h-24 text-2xl font-black rounded-3xl teal-gradient text-white border-none shadow-lg mt-4" 
                     onClick={handleAuth}
+                    disabled={isAuthenticating || !email || pin.length < 6}
                   >
-                    IDENTIFY MANUAL
+                    {isAuthenticating ? 'VERIFYING...' : 'IDENTIFY MANUAL'}
                   </Button>
                 </div>
               </div>

@@ -13,7 +13,7 @@ import { KioskKeyboard } from '@/components/kiosk/KioskKeyboard';
 import { QrScannerModal } from '@/components/kiosk/QrScannerModal';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection, useFirestore, useAuth } from '@/firebase';
-import { collection, addDoc, updateDoc, doc, query, where, getDocs, limit, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, query, where, getDocs, limit, serverTimestamp, getDoc } from 'firebase/firestore';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
@@ -44,47 +44,61 @@ export default function BorrowPage() {
   const [pin, setPin] = useState('');
   const [activeField, setActiveField] = useState<'email' | 'pin' | null>(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   const apparatusRef = useMemo(() => db ? collection(db, 'apparatus') : null, [db]);
   const { data: apparatusList } = useCollection(apparatusRef);
 
   const handleAuth = async () => {
-    if (!auth || !db) return;
+    if (!auth || !db || isAuthenticating) return;
+    setIsAuthenticating(true);
+    
     try {
       if (!email.toLowerCase().endsWith('@marsu.edu.ph')) {
         toast({ variant: "destructive", title: "Invalid Email", description: "Use institutional email (@marsu.edu.ph)." });
+        setIsAuthenticating(false);
         return;
       }
 
       const userCredential = await signInWithEmailAndPassword(auth, email, pin);
-      const userQuery = query(collection(db, 'users'), where('email', '==', email), limit(1));
-      const userSnap = await getDocs(userQuery);
+      const userDocRef = doc(db, 'users', userCredential.user.uid);
+      const userSnap = await getDoc(userDocRef);
       
-      if (!userSnap.empty) {
-        setUser({ id: userCredential.user.uid, ...userSnap.docs[0].data() });
+      if (userSnap.exists()) {
+        setUser({ id: userSnap.id, ...userSnap.data() });
         setStep('select');
-        toast({ title: "Authenticated", description: `Welcome back, ${userSnap.docs[0].data().firstName}` });
+        toast({ title: "Authenticated", description: `Welcome back, ${userSnap.data().firstName}` });
       } else {
-        toast({ variant: "destructive", title: "Error", description: "User profile not found." });
+        toast({ variant: "destructive", title: "Profile Missing", description: "User profile could not be found." });
       }
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Auth Failed", description: "Invalid credentials." });
+      toast({ variant: "destructive", title: "Login Failed", description: "Invalid email or PIN." });
+    } finally {
+      setIsAuthenticating(false);
     }
   };
 
   const handleQrScan = async (code: string) => {
-    if (!db) return;
-    const cleanCode = code.trim().toUpperCase();
-    const userQuery = query(collection(db, 'users'), where('qrCode', '==', cleanCode), limit(1));
-    const userSnap = await getDocs(userQuery);
+    if (!db || isAuthenticating) return;
+    setIsAuthenticating(true);
     
-    if (!userSnap.empty) {
-      const userData = userSnap.docs[0].data();
-      setUser({ id: userSnap.docs[0].id, ...userData });
-      setStep('select');
-      toast({ title: "Identity Verified", description: `Welcome, ${userData.firstName} ${userData.lastName}` });
-    } else {
-      toast({ variant: "destructive", title: "Access Denied", description: "QR code not recognized." });
+    try {
+      const cleanCode = code.trim().toUpperCase();
+      const userQuery = query(collection(db, 'users'), where('qrCode', '==', cleanCode), limit(1));
+      const userSnap = await getDocs(userQuery);
+      
+      if (!userSnap.empty) {
+        const userData = userSnap.docs[0].data();
+        setUser({ id: userSnap.docs[0].id, ...userData });
+        setStep('select');
+        toast({ title: "Identity Verified", description: `Welcome, ${userData.firstName} ${userData.lastName}` });
+      } else {
+        toast({ variant: "destructive", title: "Access Denied", description: "QR code not recognized." });
+      }
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Scan Error", description: "Failed to verify identity." });
+    } finally {
+      setIsAuthenticating(false);
     }
   };
 
@@ -169,8 +183,8 @@ export default function BorrowPage() {
         {step === 'auth' && (
           <motion.div key="auth" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-5xl mx-auto w-full space-y-12">
             <div className="text-center space-y-4">
-              <h2 className="text-4xl md:text-5xl font-black text-slate-800">Identify Yourself</h2>
-              <p className="text-slate-500 text-xl">Choose your preferred login method</p>
+              <h2 className="text-4xl md:text-5xl font-black text-slate-800">Identity Verification</h2>
+              <p className="text-slate-500 text-xl">Scan your QR or Login manually to continue</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -180,14 +194,15 @@ export default function BorrowPage() {
                     <QrCode className="w-12 h-12 text-primary" />
                   </div>
                   <div className="text-center space-y-2">
-                    <h3 className="text-2xl font-bold">QR Scan</h3>
-                    <p className="text-slate-500">Fast access using your ID card</p>
+                    <h3 className="text-2xl font-bold">QR Fast Access</h3>
+                    <p className="text-slate-500">Scan your ID QR code</p>
                   </div>
                   <Button 
                     className="w-full h-24 text-2xl font-black rounded-3xl blue-gradient text-white border-none mt-auto shadow-lg" 
                     onClick={() => setIsScannerOpen(true)}
+                    disabled={isAuthenticating}
                   >
-                    OPEN SCANNER
+                    {isAuthenticating ? 'VERIFYING...' : 'OPEN SCANNER'}
                   </Button>
                 </div>
               </div>
@@ -199,7 +214,7 @@ export default function BorrowPage() {
                       <UserCircle className="w-10 h-10 text-secondary" />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold">Manual Login</h3>
+                      <h3 className="text-2xl font-bold">Manual Entry</h3>
                       <p className="text-slate-500">Email & PIN</p>
                     </div>
                   </div>
@@ -207,31 +222,29 @@ export default function BorrowPage() {
                   <div className="space-y-4 flex-1">
                     <div className="space-y-2">
                       <Label className="text-lg font-bold">Institutional Email</Label>
-                      <Input 
-                        placeholder="user@marsu.edu.ph" 
-                        className="h-16 text-xl rounded-2xl bg-slate-50" 
-                        value={email} 
-                        onFocus={() => setActiveField('email')} 
-                        readOnly 
-                      />
+                      <div 
+                        className={`h-16 text-xl rounded-2xl bg-slate-50 border-2 flex items-center px-4 cursor-pointer transition-all ${activeField === 'email' ? 'border-primary ring-2 ring-primary/10' : 'border-transparent'}`}
+                        onClick={() => setActiveField('email')}
+                      >
+                        {email || <span className="text-slate-400">user@marsu.edu.ph</span>}
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-lg font-bold">6-Digit PIN</Label>
-                      <Input 
-                        type="password" 
-                        placeholder="••••••" 
-                        className="h-16 text-3xl rounded-2xl bg-slate-50 text-center tracking-widest font-black" 
-                        value={pin} 
-                        onFocus={() => setActiveField('pin')} 
-                        readOnly 
-                      />
+                      <div 
+                        className={`h-16 text-3xl rounded-2xl bg-slate-50 border-2 flex items-center justify-center cursor-pointer transition-all tracking-widest font-black ${activeField === 'pin' ? 'border-primary ring-2 ring-primary/10' : 'border-transparent'}`}
+                        onClick={() => setActiveField('pin')}
+                      >
+                        {'•'.repeat(pin.length) || <span className="text-slate-400 text-xl tracking-normal">••••••</span>}
+                      </div>
                     </div>
                   </div>
                   <Button 
                     className="w-full h-24 text-2xl font-black rounded-3xl teal-gradient text-white border-none shadow-lg mt-4" 
                     onClick={handleAuth}
+                    disabled={isAuthenticating || !email || pin.length < 6}
                   >
-                    LOGIN MANUAL
+                    {isAuthenticating ? 'LOGGING IN...' : 'LOGIN MANUAL'}
                   </Button>
                 </div>
               </div>

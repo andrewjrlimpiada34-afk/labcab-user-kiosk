@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { ChevronLeft, QrCode, CheckCircle2, RotateCcw, Mail, Lock } from 'lucide-react';
+import { ChevronLeft, QrCode, CheckCircle2, RotateCcw, Mail, Lock, UserCircle } from 'lucide-react';
 import { KioskKeyboard } from '@/components/kiosk/KioskKeyboard';
 import { QrScannerModal } from '@/components/kiosk/QrScannerModal';
 import { useToast } from '@/hooks/use-toast';
@@ -34,7 +35,6 @@ export default function ReturnPage() {
   const handleAuth = async () => {
     if (!auth || !db) return;
     try {
-      // Validate Institutional Email
       if (!email.toLowerCase().endsWith('@marsu.edu.ph')) {
         toast({ variant: "destructive", title: "Invalid Email", description: "Use institutional email (@marsu.edu.ph)." });
         return;
@@ -45,7 +45,8 @@ export default function ReturnPage() {
       const userSnap = await getDocs(userQuery);
       
       if (!userSnap.empty) {
-        setUser({ id: userCredential.user.uid, ...userSnap.docs[0].data() });
+        const userData = userSnap.docs[0].data();
+        setUser({ id: userCredential.user.uid, ...userData });
         fetchActiveTransactions(userCredential.user.uid);
       } else {
         toast({ variant: "destructive", title: "Error", description: "User profile not found." });
@@ -96,7 +97,8 @@ export default function ReturnPage() {
 
       for (const item of selectedTransaction.items) {
         const itemRef = doc(db, 'apparatus', item.itemId);
-        const apparatusSnap = await getDocs(query(collection(db, 'apparatus'), where('__name__', '==', item.itemId)));
+        const q = query(collection(db, 'apparatus'), where('__name__', '==', item.itemId));
+        const apparatusSnap = await getDocs(q);
         if (!apparatusSnap.empty) {
           const currentStock = apparatusSnap.docs[0].data().stock;
           await updateDoc(itemRef, { stock: currentStock + item.quantity });
@@ -122,61 +124,71 @@ export default function ReturnPage() {
 
       <AnimatePresence mode="wait">
         {step === 'auth' && (
-          <motion.div key="auth" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-5xl mx-auto w-full">
+          <motion.div key="auth" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-5xl mx-auto w-full space-y-12">
+            <div className="text-center space-y-4">
+              <h2 className="text-4xl md:text-5xl font-black text-slate-800">Identify Yourself</h2>
+              <p className="text-slate-500 text-xl">Scan your ID or use your PIN to return items</p>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              <div className="space-y-8 flex flex-col justify-center">
-                <div className="space-y-2 text-center lg:text-left">
-                  <h2 className="text-3xl font-black text-slate-800">Quick Scan</h2>
-                  <p className="text-slate-500 text-lg">Scan your ID QR code to check in</p>
-                </div>
-                <Button 
-                  variant="outline" 
-                  className="h-80 rounded-[2.5rem] flex flex-col gap-6 border-4 border-dashed border-primary/20 hover:border-primary hover:bg-primary/5 transition-all shadow-xl group" 
-                  onClick={() => setIsScannerOpen(true)}
-                >
-                  <QrCode className="w-32 h-32 text-primary group-hover:scale-110 transition-transform" />
-                  <span className="text-2xl font-black uppercase tracking-widest">Identify Yourself</span>
-                </Button>
-              </div>
-              
-              <div className="space-y-8 flex flex-col justify-center">
-                <div className="space-y-2 text-center lg:text-left">
-                  <h2 className="text-3xl font-black text-slate-800">Manual Check-in</h2>
-                  <p className="text-slate-500 text-lg">Enter email and PIN to proceed</p>
-                </div>
-                <div className="space-y-6 bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-100">
-                  <div className="space-y-3">
-                    <Label className="text-xl font-bold flex items-center gap-2">
-                      <Mail className="w-5 h-5 text-primary" />
-                      Email Address
-                    </Label>
-                    <Input 
-                      placeholder="username@marsu.edu.ph" 
-                      className="h-16 text-xl rounded-2xl bg-slate-50" 
-                      value={email} 
-                      onFocus={() => setActiveField('email')} 
-                      readOnly 
-                    />
+              <div className="space-y-6 h-full">
+                <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 flex flex-col items-center gap-8 h-full">
+                  <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
+                    <QrCode className="w-12 h-12 text-primary" />
                   </div>
-                  <div className="space-y-3">
-                    <Label className="text-xl font-bold flex items-center gap-2">
-                      <Lock className="w-5 h-5 text-primary" />
-                      6-Digit PIN
-                    </Label>
-                    <Input 
-                      type="password" 
-                      placeholder="••••••" 
-                      className="h-16 text-2xl rounded-2xl bg-slate-50 text-center tracking-[0.5em]" 
-                      value={pin} 
-                      onFocus={() => setActiveField('pin')} 
-                      readOnly 
-                    />
+                  <div className="text-center space-y-2">
+                    <h3 className="text-2xl font-bold">QR Fast Scan</h3>
+                    <p className="text-slate-500 text-lg">Instant check-in via QR</p>
                   </div>
                   <Button 
-                    className="w-full h-20 text-2xl font-black rounded-2xl shadow-lg blue-gradient text-white border-none mt-4" 
+                    className="w-full h-24 text-2xl font-black rounded-3xl blue-gradient text-white border-none mt-auto shadow-lg" 
+                    onClick={() => setIsScannerOpen(true)}
+                  >
+                    START SCANNING
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-6 h-full">
+                <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 space-y-6 h-full flex flex-col">
+                  <div className="flex items-center gap-4 mb-2">
+                    <div className="w-16 h-16 bg-secondary/10 rounded-2xl flex items-center justify-center">
+                      <UserCircle className="w-10 h-10 text-secondary" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold">Manual Entry</h3>
+                      <p className="text-slate-500">Log in with Email & PIN</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 flex-1">
+                    <div className="space-y-2">
+                      <Label className="text-lg font-bold">Institutional Email</Label>
+                      <Input 
+                        placeholder="user@marsu.edu.ph" 
+                        className="h-16 text-xl rounded-2xl bg-slate-50" 
+                        value={email} 
+                        onFocus={() => setActiveField('email')} 
+                        readOnly 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-lg font-bold">6-Digit PIN</Label>
+                      <Input 
+                        type="password" 
+                        placeholder="••••••" 
+                        className="h-16 text-3xl rounded-2xl bg-slate-50 text-center tracking-widest font-black" 
+                        value={pin} 
+                        onFocus={() => setActiveField('pin')} 
+                        readOnly 
+                      />
+                    </div>
+                  </div>
+                  <Button 
+                    className="w-full h-24 text-2xl font-black rounded-3xl teal-gradient text-white border-none shadow-lg mt-4" 
                     onClick={handleAuth}
                   >
-                    IDENTIFY & PROCEED
+                    IDENTIFY MANUAL
                   </Button>
                 </div>
               </div>
@@ -186,23 +198,23 @@ export default function ReturnPage() {
 
         {step === 'active' && (
           <motion.div key="active" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-4xl mx-auto space-y-8">
-            <h2 className="text-3xl font-black text-center">Active Borrowings</h2>
+            <h2 className="text-3xl font-black text-center">Select Items to Return</h2>
             <div className="grid grid-cols-1 gap-6">
               {transactions.map(tx => (
-                <Card key={tx.id} className="p-6 rounded-3xl hover:border-primary cursor-pointer transition-all border-2 bg-white" onClick={() => { setSelectedTransaction(tx); setStep('confirm'); }}>
+                <Card key={tx.id} className="p-8 rounded-3xl hover:border-primary cursor-pointer transition-all border-2 bg-white group" onClick={() => { setSelectedTransaction(tx); setStep('confirm'); }}>
                   <div className="flex justify-between items-start">
-                    <div className="space-y-2">
-                      <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">Transaction ID: {tx.id.slice(-6).toUpperCase()}</p>
-                      <div className="flex flex-wrap gap-2">
+                    <div className="space-y-4">
+                      <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">TX ID: {tx.id.slice(-6).toUpperCase()}</p>
+                      <div className="flex flex-wrap gap-3">
                         {tx.items.map((it: any, i: number) => (
-                          <span key={i} className="px-3 py-1 bg-primary/10 text-primary font-bold rounded-lg text-sm">{it.name} x{it.quantity}</span>
+                          <span key={i} className="px-4 py-2 bg-primary/10 text-primary font-bold rounded-xl text-lg">{it.name} x{it.quantity}</span>
                         ))}
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right space-y-1">
                       <p className="text-sm text-slate-400 font-bold uppercase">Deadline</p>
-                      <p className="text-lg font-black text-orange-600">
-                        {tx.deadline ? new Date(tx.deadline).toLocaleTimeString() : 'N/A'}
+                      <p className="text-2xl font-black text-orange-600">
+                        {tx.deadline ? new Date(tx.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
                       </p>
                     </div>
                   </div>
@@ -214,23 +226,25 @@ export default function ReturnPage() {
 
         {step === 'confirm' && (
           <motion.div key="confirm" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-2xl mx-auto space-y-8">
-            <Card className="p-8 rounded-[2.5rem] shadow-2xl space-y-8 border-4 border-teal-500/10 bg-white">
+            <Card className="p-8 md:p-12 rounded-[2.5rem] shadow-2xl space-y-8 border-4 border-teal-500/10 bg-white">
               <div className="text-center space-y-4">
-                <RotateCcw className="w-20 h-20 text-teal-500 mx-auto" />
+                <div className="w-24 h-24 bg-teal-50 rounded-full flex items-center justify-center mx-auto">
+                  <RotateCcw className="w-12 h-12 text-teal-500" />
+                </div>
                 <h2 className="text-4xl font-black">Confirm Return</h2>
-                <p className="text-xl text-slate-500">The following compartment/s for the apparatus will be unlocked.</p>
+                <p className="text-xl text-slate-500">Returning these items to their designated compartments:</p>
               </div>
-              <div className="space-y-4 bg-slate-50 p-6 rounded-3xl">
+              <div className="space-y-4 bg-slate-50 p-8 rounded-3xl">
                 {selectedTransaction.items.map((it: any, i: number) => (
-                  <div key={i} className="flex justify-between items-center text-xl font-bold">
-                    <span>{it.name}</span>
+                  <div key={i} className="flex justify-between items-center text-2xl font-bold">
+                    <span className="text-slate-700">{it.name}</span>
                     <span className="text-teal-600">x{it.quantity}</span>
                   </div>
                 ))}
               </div>
               <div className="flex gap-4">
                 <Button variant="outline" className="flex-1 h-20 text-xl font-bold rounded-2xl" onClick={() => setStep('active')}>BACK</Button>
-                <Button className="flex-1 h-20 text-xl font-bold rounded-2xl teal-gradient text-white border-none" onClick={finalizeReturn}>CONFIRM RETURN</Button>
+                <Button className="flex-1 h-24 text-2xl font-black rounded-3xl teal-gradient text-white border-none shadow-xl" onClick={finalizeReturn}>FINALIZE RETURN</Button>
               </div>
             </Card>
           </motion.div>
@@ -243,7 +257,7 @@ export default function ReturnPage() {
             </div>
             <div className="space-y-4">
               <h2 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight">Return Successful</h2>
-              <p className="text-2xl md:text-3xl text-slate-500 font-medium">Thank you for returning the items properly.</p>
+              <p className="text-2xl md:text-3xl text-slate-500 font-medium">The apparatus has been logged back into inventory.</p>
             </div>
             <p className="text-xl text-slate-400">Returning to Home in 5 seconds...</p>
           </motion.div>

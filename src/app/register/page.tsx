@@ -56,7 +56,6 @@ export default function RegisterPage() {
     e.preventDefault();
     if (!auth || !db) return;
 
-    // Email Validation
     if (!formData.email.toLowerCase().endsWith('@marsu.edu.ph')) {
       toast({ 
         variant: "destructive", 
@@ -66,13 +65,11 @@ export default function RegisterPage() {
       return;
     }
 
-    // QR Registration Check
     if (!formData.qrCode) {
       toast({ variant: "destructive", title: "QR Required", description: "Please register your QR code first." });
       return;
     }
 
-    // PIN Validation
     if (formData.pin.length !== 6 || !/^\d+$/.test(formData.pin)) {
       toast({ variant: "destructive", title: "Invalid PIN", description: "PIN must be exactly 6 digits." });
       return;
@@ -83,7 +80,6 @@ export default function RegisterPage() {
       return;
     }
 
-    // Student ID Validation
     if (role === 'student') {
       if (formData.studentId.length !== 7) {
         toast({ variant: "destructive", title: "Invalid ID", description: "Student ID must be exactly 7 characters." });
@@ -96,7 +92,6 @@ export default function RegisterPage() {
     }
 
     try {
-      // Use PIN as a password string for Firebase Auth (needs at least 6 characters)
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.pin);
       const userRef = doc(db, 'users', userCredential.user.uid);
       

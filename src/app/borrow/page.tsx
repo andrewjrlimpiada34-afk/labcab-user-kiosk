@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { ChevronLeft, QrCode, CheckCircle2, ShoppingBag, Plus, Minus, Beaker, FlaskConical, Box, Scissors, Thermometer, Clock, Pipette, Flame, Mail, Lock } from 'lucide-react';
+import { ChevronLeft, QrCode, CheckCircle2, ShoppingBag, Plus, Minus, Beaker, FlaskConical, Box, Scissors, Thermometer, Clock, Pipette, Flame, Mail, Lock, UserCircle } from 'lucide-react';
 import { KioskKeyboard } from '@/components/kiosk/KioskKeyboard';
 import { QrScannerModal } from '@/components/kiosk/QrScannerModal';
 import { useToast } from '@/hooks/use-toast';
@@ -50,7 +51,6 @@ export default function BorrowPage() {
   const handleAuth = async () => {
     if (!auth || !db) return;
     try {
-      // Validate Institutional Email
       if (!email.toLowerCase().endsWith('@marsu.edu.ph')) {
         toast({ variant: "destructive", title: "Invalid Email", description: "Use institutional email (@marsu.edu.ph)." });
         return;
@@ -82,7 +82,7 @@ export default function BorrowPage() {
       const userData = userSnap.docs[0].data();
       setUser({ id: userSnap.docs[0].id, ...userData });
       setStep('select');
-      toast({ title: "Welcome", description: `${userData.firstName} ${userData.lastName}` });
+      toast({ title: "Identity Verified", description: `Welcome, ${userData.firstName} ${userData.lastName}` });
     } else {
       toast({ variant: "destructive", title: "Access Denied", description: "QR code not recognized." });
     }
@@ -167,61 +167,71 @@ export default function BorrowPage() {
 
       <AnimatePresence mode="wait">
         {step === 'auth' && (
-          <motion.div key="auth" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-5xl mx-auto w-full">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              <div className="space-y-8 flex flex-col justify-center">
-                <div className="space-y-2 text-center lg:text-left">
-                  <h2 className="text-3xl font-black text-slate-800">Identity Scan</h2>
-                  <p className="text-slate-500 text-lg">Scan your student or faculty QR code</p>
-                </div>
-                <Button 
-                  variant="outline" 
-                  className="h-80 rounded-[2.5rem] flex flex-col gap-6 border-4 border-dashed border-primary/20 hover:border-primary hover:bg-primary/5 transition-all shadow-xl group" 
-                  onClick={() => setIsScannerOpen(true)}
-                >
-                  <QrCode className="w-32 h-32 text-primary group-hover:scale-110 transition-transform" />
-                  <span className="text-2xl font-black uppercase tracking-widest">Open Scanner</span>
-                </Button>
-              </div>
+          <motion.div key="auth" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-5xl mx-auto w-full space-y-12">
+            <div className="text-center space-y-4">
+              <h2 className="text-4xl md:text-5xl font-black text-slate-800">Identify Yourself</h2>
+              <p className="text-slate-500 text-xl">Choose your preferred login method</p>
+            </div>
 
-              <div className="space-y-8 flex flex-col justify-center">
-                <div className="space-y-2 text-center lg:text-left">
-                  <h2 className="text-3xl font-black text-slate-800">Manual Login</h2>
-                  <p className="text-slate-500 text-lg">Enter your institutional credentials</p>
-                </div>
-                <div className="space-y-6 bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-100">
-                  <div className="space-y-3">
-                    <Label className="text-xl font-bold flex items-center gap-2">
-                      <Mail className="w-5 h-5 text-primary" />
-                      Email Address
-                    </Label>
-                    <Input 
-                      placeholder="username@marsu.edu.ph" 
-                      className="h-16 text-xl rounded-2xl bg-slate-50" 
-                      value={email} 
-                      onFocus={() => setActiveField('email')} 
-                      readOnly 
-                    />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <div className="space-y-6">
+                <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 flex flex-col items-center gap-8 h-full">
+                  <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
+                    <QrCode className="w-12 h-12 text-primary" />
                   </div>
-                  <div className="space-y-3">
-                    <Label className="text-xl font-bold flex items-center gap-2">
-                      <Lock className="w-5 h-5 text-primary" />
-                      6-Digit PIN
-                    </Label>
-                    <Input 
-                      type="password" 
-                      placeholder="••••••" 
-                      className="h-16 text-2xl rounded-2xl bg-slate-50 text-center tracking-[0.5em]" 
-                      value={pin} 
-                      onFocus={() => setActiveField('pin')} 
-                      readOnly 
-                    />
+                  <div className="text-center space-y-2">
+                    <h3 className="text-2xl font-bold">QR Scan</h3>
+                    <p className="text-slate-500">Fast access using your ID card</p>
                   </div>
                   <Button 
-                    className="w-full h-20 text-2xl font-black rounded-2xl shadow-lg blue-gradient text-white border-none mt-4" 
+                    className="w-full h-24 text-2xl font-black rounded-3xl blue-gradient text-white border-none mt-auto shadow-lg" 
+                    onClick={() => setIsScannerOpen(true)}
+                  >
+                    OPEN SCANNER
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 space-y-6 h-full flex flex-col">
+                  <div className="flex items-center gap-4 mb-2">
+                    <div className="w-16 h-16 bg-secondary/10 rounded-2xl flex items-center justify-center">
+                      <UserCircle className="w-10 h-10 text-secondary" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold">Manual Login</h3>
+                      <p className="text-slate-500">Email & PIN</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 flex-1">
+                    <div className="space-y-2">
+                      <Label className="text-lg font-bold">Institutional Email</Label>
+                      <Input 
+                        placeholder="user@marsu.edu.ph" 
+                        className="h-16 text-xl rounded-2xl bg-slate-50" 
+                        value={email} 
+                        onFocus={() => setActiveField('email')} 
+                        readOnly 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-lg font-bold">6-Digit PIN</Label>
+                      <Input 
+                        type="password" 
+                        placeholder="••••••" 
+                        className="h-16 text-3xl rounded-2xl bg-slate-50 text-center tracking-widest font-black" 
+                        value={pin} 
+                        onFocus={() => setActiveField('pin')} 
+                        readOnly 
+                      />
+                    </div>
+                  </div>
+                  <Button 
+                    className="w-full h-24 text-2xl font-black rounded-3xl teal-gradient text-white border-none shadow-lg mt-4" 
                     onClick={handleAuth}
                   >
-                    LOGIN & ACCESS
+                    LOGIN MANUAL
                   </Button>
                 </div>
               </div>
@@ -254,13 +264,6 @@ export default function BorrowPage() {
                   </Card>
                 );
               })}
-              {(!apparatusList || apparatusList.length === 0) && (
-                <div className="col-span-full py-20 text-center opacity-20">
-                  <Box className="w-20 h-20 mx-auto mb-4" />
-                  <p className="text-2xl font-bold">No items in inventory.</p>
-                  <p>Please seed inventory in Admin panel.</p>
-                </div>
-              )}
             </div>
             {totalItems > 0 && (
               <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6">

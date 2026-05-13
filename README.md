@@ -1,3 +1,4 @@
+
 # LabCab | Smart Laboratory Cabinet
 
 A modern kiosk-style application for managing laboratory equipment borrowing and returning.
@@ -23,7 +24,6 @@ The application is optimized for Vercel, which handles both the Next.js UI and S
    - `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
    - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
    - `NEXT_PUBLIC_FIREBASE_APP_ID`
-   - `GOOGLE_GENAI_API_KEY` (Your Gemini API key)
 
 ### 3. Kiosk Setup
 For deployment on a physical kiosk (e.g., Raspberry Pi):

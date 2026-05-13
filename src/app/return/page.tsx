@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -8,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { ChevronLeft, QrCode, CheckCircle2, RotateCcw } from 'lucide-react';
+import { ChevronLeft, QrCode, CheckCircle2, RotateCcw, Mail, Lock } from 'lucide-react';
 import { KioskKeyboard } from '@/components/kiosk/KioskKeyboard';
 import { QrScannerModal } from '@/components/kiosk/QrScannerModal';
 import { useToast } from '@/hooks/use-toast';
@@ -35,6 +34,12 @@ export default function ReturnPage() {
   const handleAuth = async () => {
     if (!auth || !db) return;
     try {
+      // Validate Institutional Email
+      if (!email.toLowerCase().endsWith('@marsu.edu.ph')) {
+        toast({ variant: "destructive", title: "Invalid Email", description: "Use institutional email (@marsu.edu.ph)." });
+        return;
+      }
+
       const userCredential = await signInWithEmailAndPassword(auth, email, pin);
       const userQuery = query(collection(db, 'users'), where('email', '==', email), limit(1));
       const userSnap = await getDocs(userQuery);
@@ -46,7 +51,7 @@ export default function ReturnPage() {
         toast({ variant: "destructive", title: "Error", description: "User profile not found." });
       }
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Auth Failed", description: "Invalid email or PIN." });
+      toast({ variant: "destructive", title: "Auth Failed", description: "Invalid credentials." });
     }
   };
 
@@ -57,11 +62,12 @@ export default function ReturnPage() {
     const userSnap = await getDocs(userQuery);
     
     if (!userSnap.empty) {
-      setUser({ id: userSnap.docs[0].id, ...userSnap.docs[0].data() });
+      const userData = userSnap.docs[0].data();
+      setUser({ id: userSnap.docs[0].id, ...userData });
       fetchActiveTransactions(userSnap.docs[0].id);
-      toast({ title: "Authenticated", description: `Welcome back, ${userSnap.docs[0].data().firstName}` });
+      toast({ title: "Authenticated", description: `Welcome back, ${userData.firstName}` });
     } else {
-      toast({ variant: "destructive", title: "Not Found", description: "Account not found." });
+      toast({ variant: "destructive", title: "Not Found", description: "Account not recognized." });
     }
   };
 
@@ -90,9 +96,9 @@ export default function ReturnPage() {
 
       for (const item of selectedTransaction.items) {
         const itemRef = doc(db, 'apparatus', item.itemId);
-        const appSnap = await getDocs(query(collection(db, 'apparatus'), where('__name__', '==', item.itemId)));
-        if (!appSnap.empty) {
-          const currentStock = appSnap.docs[0].data().stock;
+        const apparatusSnap = await getDocs(query(collection(db, 'apparatus'), where('__name__', '==', item.itemId)));
+        if (!apparatusSnap.empty) {
+          const currentStock = apparatusSnap.docs[0].data().stock;
           await updateDoc(itemRef, { stock: currentStock + item.quantity });
         }
       }
@@ -106,7 +112,7 @@ export default function ReturnPage() {
 
   return (
     <div className="kiosk-container p-6 md:p-12 overflow-y-auto min-h-screen bg-slate-50">
-      <header className="flex items-center justify-between mb-12">
+      <header className="flex items-center justify-between mb-8 md:mb-12">
         <Button variant="ghost" className="rounded-full w-14 h-14 md:w-20 md:h-20" onClick={() => router.push('/')}>
           <ChevronLeft className="w-8 h-8 md:w-12 md:h-12" />
         </Button>
@@ -116,23 +122,63 @@ export default function ReturnPage() {
 
       <AnimatePresence mode="wait">
         {step === 'auth' && (
-          <motion.div key="auth" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-4xl mx-auto w-full space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Button variant="outline" className="h-80 rounded-3xl flex flex-col gap-6 border-4 border-dashed border-primary/20 hover:border-primary hover:bg-primary/5 transition-all" onClick={() => setIsScannerOpen(true)}>
-                <QrCode className="w-32 h-32 text-primary" />
-                <span className="text-3xl font-black">SCAN QR CODE</span>
-              </Button>
+          <motion.div key="auth" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-5xl mx-auto w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <div className="space-y-8 flex flex-col justify-center">
+                <div className="space-y-2 text-center lg:text-left">
+                  <h2 className="text-3xl font-black text-slate-800">Quick Scan</h2>
+                  <p className="text-slate-500 text-lg">Scan your ID QR code to check in</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  className="h-80 rounded-[2.5rem] flex flex-col gap-6 border-4 border-dashed border-primary/20 hover:border-primary hover:bg-primary/5 transition-all shadow-xl group" 
+                  onClick={() => setIsScannerOpen(true)}
+                >
+                  <QrCode className="w-32 h-32 text-primary group-hover:scale-110 transition-transform" />
+                  <span className="text-2xl font-black uppercase tracking-widest">Identify Yourself</span>
+                </Button>
+              </div>
               
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <Label className="text-xl font-bold">Email Access</Label>
-                  <Input placeholder="university.edu.ph" className="h-16 text-xl rounded-2xl bg-white" value={email} onFocus={() => setActiveField('email')} readOnly />
+              <div className="space-y-8 flex flex-col justify-center">
+                <div className="space-y-2 text-center lg:text-left">
+                  <h2 className="text-3xl font-black text-slate-800">Manual Check-in</h2>
+                  <p className="text-slate-500 text-lg">Enter email and PIN to proceed</p>
                 </div>
-                <div className="space-y-4">
-                  <Label className="text-xl font-bold">Security PIN</Label>
-                  <Input type="password" placeholder="••••••" className="h-16 text-xl rounded-2xl bg-white" value={pin} onFocus={() => setActiveField('pin')} readOnly />
+                <div className="space-y-6 bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-100">
+                  <div className="space-y-3">
+                    <Label className="text-xl font-bold flex items-center gap-2">
+                      <Mail className="w-5 h-5 text-primary" />
+                      Email Address
+                    </Label>
+                    <Input 
+                      placeholder="username@marsu.edu.ph" 
+                      className="h-16 text-xl rounded-2xl bg-slate-50" 
+                      value={email} 
+                      onFocus={() => setActiveField('email')} 
+                      readOnly 
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-xl font-bold flex items-center gap-2">
+                      <Lock className="w-5 h-5 text-primary" />
+                      6-Digit PIN
+                    </Label>
+                    <Input 
+                      type="password" 
+                      placeholder="••••••" 
+                      className="h-16 text-2xl rounded-2xl bg-slate-50 text-center tracking-[0.5em]" 
+                      value={pin} 
+                      onFocus={() => setActiveField('pin')} 
+                      readOnly 
+                    />
+                  </div>
+                  <Button 
+                    className="w-full h-20 text-2xl font-black rounded-2xl shadow-lg blue-gradient text-white border-none mt-4" 
+                    onClick={handleAuth}
+                  >
+                    IDENTIFY & PROCEED
+                  </Button>
                 </div>
-                <Button className="w-full h-20 text-2xl font-black rounded-2xl blue-gradient text-white border-none" onClick={handleAuth}>LOGIN & PROCEED</Button>
               </div>
             </div>
           </motion.div>

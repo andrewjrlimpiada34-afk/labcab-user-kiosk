@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -8,13 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { ChevronLeft, QrCode, CheckCircle2, ShoppingBag, Plus, Minus, Beaker, FlaskConical, Box, Scissors, Thermometer, Clock, Pipette, Flame } from 'lucide-react';
+import { ChevronLeft, QrCode, CheckCircle2, ShoppingBag, Plus, Minus, Beaker, FlaskConical, Box, Scissors, Thermometer, Clock, Pipette, Flame, Mail, Lock } from 'lucide-react';
 import { KioskKeyboard } from '@/components/kiosk/KioskKeyboard';
 import { QrScannerModal } from '@/components/kiosk/QrScannerModal';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection, useFirestore, useAuth } from '@/firebase';
 import { collection, addDoc, updateDoc, doc, query, where, getDocs, limit, serverTimestamp } from 'firebase/firestore';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 const APPARATUS_ICONS: Record<string, any> = {
   'Beaker 250ml': Beaker,
@@ -49,6 +50,12 @@ export default function BorrowPage() {
   const handleAuth = async () => {
     if (!auth || !db) return;
     try {
+      // Validate Institutional Email
+      if (!email.toLowerCase().endsWith('@marsu.edu.ph')) {
+        toast({ variant: "destructive", title: "Invalid Email", description: "Use institutional email (@marsu.edu.ph)." });
+        return;
+      }
+
       const userCredential = await signInWithEmailAndPassword(auth, email, pin);
       const userQuery = query(collection(db, 'users'), where('email', '==', email), limit(1));
       const userSnap = await getDocs(userQuery);
@@ -56,11 +63,12 @@ export default function BorrowPage() {
       if (!userSnap.empty) {
         setUser({ id: userCredential.user.uid, ...userSnap.docs[0].data() });
         setStep('select');
+        toast({ title: "Authenticated", description: `Welcome back, ${userSnap.docs[0].data().firstName}` });
       } else {
-        toast({ variant: "destructive", title: "Error", description: "User profile not found in database." });
+        toast({ variant: "destructive", title: "Error", description: "User profile not found." });
       }
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Auth Failed", description: "Invalid email or PIN." });
+      toast({ variant: "destructive", title: "Auth Failed", description: "Invalid credentials." });
     }
   };
 
@@ -108,27 +116,43 @@ export default function BorrowPage() {
     else if (returnTime === '3 Hours') deadline.setHours(deadline.getHours() + 3);
     else deadline.setHours(17, 0, 0); 
 
-    try {
-      await addDoc(collection(db, 'transactions'), {
-        userId: user.id,
-        userName: `${user.firstName} ${user.lastName}`,
-        items,
-        status: 'active',
-        borrowTime: serverTimestamp(),
-        deadline: deadline.toISOString()
+    const transactionData = {
+      userId: user.id,
+      userName: `${user.firstName} ${user.lastName}`,
+      items,
+      status: 'active',
+      borrowTime: serverTimestamp(),
+      deadline: deadline.toISOString()
+    };
+
+    const transactionsCollection = collection(db, 'transactions');
+    addDoc(transactionsCollection, transactionData)
+      .then(async () => {
+        for (const item of items) {
+          const itemRef = doc(db, 'apparatus', item.itemId);
+          const original = apparatusList?.find(a => a.id === item.itemId);
+          const newStock = (original?.stock || 0) - item.quantity;
+          
+          updateDoc(itemRef, { stock: newStock })
+            .catch(async () => {
+              errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: itemRef.path,
+                operation: 'update',
+                requestResourceData: { stock: newStock }
+              } satisfies SecurityRuleContext));
+            });
+        }
+
+        setStep('success');
+        setTimeout(() => router.push('/'), 5000);
+      })
+      .catch(async (err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: transactionsCollection.path,
+          operation: 'create',
+          requestResourceData: transactionData
+        } satisfies SecurityRuleContext));
       });
-
-      for (const item of items) {
-        const itemRef = doc(db, 'apparatus', item.itemId);
-        const original = apparatusList?.find(a => a.id === item.itemId);
-        await updateDoc(itemRef, { stock: (original?.stock || 0) - item.quantity });
-      }
-
-      setStep('success');
-      setTimeout(() => router.push('/'), 5000);
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "Could not process transaction." });
-    }
   };
 
   return (
@@ -143,22 +167,63 @@ export default function BorrowPage() {
 
       <AnimatePresence mode="wait">
         {step === 'auth' && (
-          <motion.div key="auth" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-4xl mx-auto w-full space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Button variant="outline" className="h-64 md:h-80 rounded-3xl flex flex-col gap-6 border-4 border-dashed border-primary/20 hover:border-primary hover:bg-primary/5 transition-all" onClick={() => setIsScannerOpen(true)}>
-                <QrCode className="w-24 h-24 md:w-32 md:h-32 text-primary" />
-                <span className="text-2xl md:text-3xl font-black uppercase">Scan QR Code</span>
-              </Button>
-              
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <Label className="text-xl font-bold">Manual Login</Label>
-                  <Input placeholder="example@marsu.edu.ph" className="h-14 md:h-16 text-lg md:text-xl rounded-2xl bg-white" value={email} onFocus={() => setActiveField('email')} readOnly />
+          <motion.div key="auth" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-5xl mx-auto w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <div className="space-y-8 flex flex-col justify-center">
+                <div className="space-y-2 text-center lg:text-left">
+                  <h2 className="text-3xl font-black text-slate-800">Identity Scan</h2>
+                  <p className="text-slate-500 text-lg">Scan your student or faculty QR code</p>
                 </div>
-                <div className="space-y-4">
-                  <Input type="password" placeholder="6-Digit PIN" className="h-14 md:h-16 text-lg md:text-xl rounded-2xl bg-white" value={pin} onFocus={() => setActiveField('pin')} readOnly />
+                <Button 
+                  variant="outline" 
+                  className="h-80 rounded-[2.5rem] flex flex-col gap-6 border-4 border-dashed border-primary/20 hover:border-primary hover:bg-primary/5 transition-all shadow-xl group" 
+                  onClick={() => setIsScannerOpen(true)}
+                >
+                  <QrCode className="w-32 h-32 text-primary group-hover:scale-110 transition-transform" />
+                  <span className="text-2xl font-black uppercase tracking-widest">Open Scanner</span>
+                </Button>
+              </div>
+
+              <div className="space-y-8 flex flex-col justify-center">
+                <div className="space-y-2 text-center lg:text-left">
+                  <h2 className="text-3xl font-black text-slate-800">Manual Login</h2>
+                  <p className="text-slate-500 text-lg">Enter your institutional credentials</p>
                 </div>
-                <Button className="w-full h-16 md:h-20 text-xl md:text-2xl font-black rounded-2xl shadow-lg blue-gradient text-white border-none" onClick={handleAuth}>LOGIN</Button>
+                <div className="space-y-6 bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-100">
+                  <div className="space-y-3">
+                    <Label className="text-xl font-bold flex items-center gap-2">
+                      <Mail className="w-5 h-5 text-primary" />
+                      Email Address
+                    </Label>
+                    <Input 
+                      placeholder="username@marsu.edu.ph" 
+                      className="h-16 text-xl rounded-2xl bg-slate-50" 
+                      value={email} 
+                      onFocus={() => setActiveField('email')} 
+                      readOnly 
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-xl font-bold flex items-center gap-2">
+                      <Lock className="w-5 h-5 text-primary" />
+                      6-Digit PIN
+                    </Label>
+                    <Input 
+                      type="password" 
+                      placeholder="••••••" 
+                      className="h-16 text-2xl rounded-2xl bg-slate-50 text-center tracking-[0.5em]" 
+                      value={pin} 
+                      onFocus={() => setActiveField('pin')} 
+                      readOnly 
+                    />
+                  </div>
+                  <Button 
+                    className="w-full h-20 text-2xl font-black rounded-2xl shadow-lg blue-gradient text-white border-none mt-4" 
+                    onClick={handleAuth}
+                  >
+                    LOGIN & ACCESS
+                  </Button>
+                </div>
               </div>
             </div>
           </motion.div>

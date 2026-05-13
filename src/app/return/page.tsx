@@ -28,14 +28,14 @@ export default function ReturnPage() {
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [activeField, setActiveField] = useState<'email' | 'password' | null>(null);
+  const [pin, setPin] = useState('');
+  const [activeField, setActiveField] = useState<'email' | 'pin' | null>(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const handleAuth = async () => {
     if (!auth || !db) return;
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, pin);
       const userQuery = query(collection(db, 'users'), where('email', '==', email), limit(1));
       const userSnap = await getDocs(userQuery);
       
@@ -46,13 +46,14 @@ export default function ReturnPage() {
         toast({ variant: "destructive", title: "Error", description: "User profile not found." });
       }
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Auth Failed", description: "Invalid credentials." });
+      toast({ variant: "destructive", title: "Auth Failed", description: "Invalid email or PIN." });
     }
   };
 
   const handleQrScan = async (code: string) => {
     if (!db) return;
-    const userQuery = query(collection(db, 'users'), where('qrCode', '==', code), limit(1));
+    const cleanCode = code.trim().toUpperCase();
+    const userQuery = query(collection(db, 'users'), where('qrCode', '==', cleanCode), limit(1));
     const userSnap = await getDocs(userQuery);
     
     if (!userSnap.empty) {
@@ -104,13 +105,13 @@ export default function ReturnPage() {
   };
 
   return (
-    <div className="kiosk-container p-12 overflow-y-auto">
+    <div className="kiosk-container p-6 md:p-12 overflow-y-auto min-h-screen bg-slate-50">
       <header className="flex items-center justify-between mb-12">
-        <Button variant="ghost" className="rounded-full w-20 h-20" onClick={() => router.push('/')}>
-          <ChevronLeft className="w-12 h-12" />
+        <Button variant="ghost" className="rounded-full w-14 h-14 md:w-20 md:h-20" onClick={() => router.push('/')}>
+          <ChevronLeft className="w-8 h-8 md:w-12 md:h-12" />
         </Button>
-        <h1 className="text-5xl font-black text-primary tracking-tight">Return Apparatus</h1>
-        <div className="w-20" />
+        <h1 className="text-3xl md:text-5xl font-black text-primary tracking-tight">Return Apparatus</h1>
+        <div className="w-14 md:w-20" />
       </header>
 
       <AnimatePresence mode="wait">
@@ -125,13 +126,13 @@ export default function ReturnPage() {
               <div className="space-y-6">
                 <div className="space-y-4">
                   <Label className="text-xl font-bold">Email Access</Label>
-                  <Input placeholder="university.edu.ph" className="h-16 text-xl rounded-2xl" value={email} onFocus={() => setActiveField('email')} readOnly />
+                  <Input placeholder="university.edu.ph" className="h-16 text-xl rounded-2xl bg-white" value={email} onFocus={() => setActiveField('email')} readOnly />
                 </div>
                 <div className="space-y-4">
-                  <Label className="text-xl font-bold">Security Password</Label>
-                  <Input type="password" placeholder="••••••••" className="h-16 text-xl rounded-2xl" value={password} onFocus={() => setActiveField('password')} readOnly />
+                  <Label className="text-xl font-bold">Security PIN</Label>
+                  <Input type="password" placeholder="••••••" className="h-16 text-xl rounded-2xl bg-white" value={pin} onFocus={() => setActiveField('pin')} readOnly />
                 </div>
-                <Button className="w-full h-20 text-2xl font-black rounded-2xl" onClick={handleAuth}>LOGIN & PROCEED</Button>
+                <Button className="w-full h-20 text-2xl font-black rounded-2xl blue-gradient text-white border-none" onClick={handleAuth}>LOGIN & PROCEED</Button>
               </div>
             </div>
           </motion.div>
@@ -142,10 +143,10 @@ export default function ReturnPage() {
             <h2 className="text-3xl font-black text-center">Active Borrowings</h2>
             <div className="grid grid-cols-1 gap-6">
               {transactions.map(tx => (
-                <Card key={tx.id} className="p-6 rounded-3xl hover:border-primary cursor-pointer transition-all border-2" onClick={() => { setSelectedTransaction(tx); setStep('confirm'); }}>
+                <Card key={tx.id} className="p-6 rounded-3xl hover:border-primary cursor-pointer transition-all border-2 bg-white" onClick={() => { setSelectedTransaction(tx); setStep('confirm'); }}>
                   <div className="flex justify-between items-start">
                     <div className="space-y-2">
-                      <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">Transaction ID: {tx.id.slice(-6)}</p>
+                      <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">Transaction ID: {tx.id.slice(-6).toUpperCase()}</p>
                       <div className="flex flex-wrap gap-2">
                         {tx.items.map((it: any, i: number) => (
                           <span key={i} className="px-3 py-1 bg-primary/10 text-primary font-bold rounded-lg text-sm">{it.name} x{it.quantity}</span>
@@ -154,7 +155,9 @@ export default function ReturnPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-slate-400 font-bold uppercase">Deadline</p>
-                      <p className="text-lg font-black text-orange-600">{new Date(tx.deadline).toLocaleTimeString()}</p>
+                      <p className="text-lg font-black text-orange-600">
+                        {tx.deadline ? new Date(tx.deadline).toLocaleTimeString() : 'N/A'}
+                      </p>
                     </div>
                   </div>
                 </Card>
@@ -165,7 +168,7 @@ export default function ReturnPage() {
 
         {step === 'confirm' && (
           <motion.div key="confirm" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-2xl mx-auto space-y-8">
-            <Card className="p-8 rounded-[2.5rem] shadow-2xl space-y-8 border-4 border-teal-500/10">
+            <Card className="p-8 rounded-[2.5rem] shadow-2xl space-y-8 border-4 border-teal-500/10 bg-white">
               <div className="text-center space-y-4">
                 <RotateCcw className="w-20 h-20 text-teal-500 mx-auto" />
                 <h2 className="text-4xl font-black">Confirm Return</h2>
@@ -181,30 +184,36 @@ export default function ReturnPage() {
               </div>
               <div className="flex gap-4">
                 <Button variant="outline" className="flex-1 h-20 text-xl font-bold rounded-2xl" onClick={() => setStep('active')}>BACK</Button>
-                <Button className="flex-1 h-20 text-xl font-bold rounded-2xl bg-teal-600 hover:bg-teal-700" onClick={finalizeReturn}>CONFIRM RETURN</Button>
+                <Button className="flex-1 h-20 text-xl font-bold rounded-2xl teal-gradient text-white border-none" onClick={finalizeReturn}>CONFIRM RETURN</Button>
               </div>
             </Card>
           </motion.div>
         )}
 
         {step === 'success' && (
-          <motion.div key="success" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center justify-center text-center space-y-12">
-            <div className="w-48 h-48 bg-teal-100 rounded-full flex items-center justify-center text-teal-600">
+          <motion.div key="success" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center justify-center text-center space-y-12 py-20">
+            <div className="w-48 h-48 bg-teal-100 rounded-full flex items-center justify-center text-teal-600 shadow-inner">
               <CheckCircle2 className="w-32 h-32" />
             </div>
             <div className="space-y-4">
-              <h2 className="text-7xl font-black text-slate-900">Return Successful</h2>
-              <p className="text-3xl text-slate-500 font-medium">Thank you for returning the items properly.</p>
+              <h2 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight">Return Successful</h2>
+              <p className="text-2xl md:text-3xl text-slate-500 font-medium">Thank you for returning the items properly.</p>
             </div>
             <p className="text-xl text-slate-400">Returning to Home in 5 seconds...</p>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <KioskKeyboard visible={activeField !== null} onInput={(val) => {
-        if (activeField === 'email') setEmail(val);
-        if (activeField === 'password') setPassword(val);
-      }} onClose={() => setActiveField(null)} initialValue={activeField === 'email' ? email : password} />
+      <KioskKeyboard 
+        visible={activeField !== null} 
+        onInput={(val) => {
+          if (activeField === 'email') setEmail(val);
+          if (activeField === 'pin') setPin(val);
+        }} 
+        onClose={() => setActiveField(null)} 
+        initialValue={activeField === 'email' ? email : pin} 
+        layoutType={activeField === 'pin' ? 'numeric' : 'default'}
+      />
       <QrScannerModal isOpen={isScannerOpen} onScan={handleQrScan} onClose={() => setIsScannerOpen(false)} title="Authenticate via QR" />
     </div>
   );

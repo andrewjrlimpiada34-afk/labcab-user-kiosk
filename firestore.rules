@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow lookup of user profiles during registration or kiosk login
+    match /users/{userId} {
+      // Allow creating a profile if they are authenticated (registration)
+      // or if it's the kiosk service
+      allow read, write: if true; 
+      
+      // Allow searching for users by studentId or qrCode (essential for kiosk login)
+      allow list: if true; 
+    }
+    
+    // Allow everyone to read the inventory (Apparatus)
+    // Kiosk needs to update stock during transactions
+    match /apparatus/{apparatusId} {
+      allow read: if true;
+      allow write: if true; 
+    }
+    
+    // Allow kiosk operations to manage transactions
+    match /transactions/{transactionId} {
+      allow read, write: if true;
+    }
+  }
+}

@@ -12,7 +12,7 @@
         "email": { "type": "string", "format": "email" },
         "role": { "type": "string", "enum": ["student", "teacher"] },
         "course": { "type": "string", "description": "Applicable to students only" },
-        "studentId": { "type": "string", "description": "Exactly 7 uppercase characters" },
+        "studentId": { "type": "string", "description": "Exactly 7 alphanumeric characters" },
         "qrCode": { "type": "string", "description": "Unique identifier scanned from physical QR" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
@@ -27,10 +27,9 @@
         "category": { "type": "string" },
         "stock": { "type": "number" },
         "total": { "type": "number" },
-        "icon": { "type": "string" },
-        "imageUrl": { "type": "string" }
+        "icon": { "type": "string", "enum": ["Beaker", "FlaskConical", "Pipette", "Flame", "Microscope", "Box", "Scissors", "Thermometer"] }
       },
-      "required": ["name", "stock", "total"]
+      "required": ["name", "stock", "total", "icon"]
     },
     "Transaction": {
       "title": "Borrow Transaction",

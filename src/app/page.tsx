@@ -1,9 +1,10 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Microscope, UserPlus, ShoppingBag, RotateCcw, Clock, Settings } from 'lucide-react';
+import { Microscope, UserPlus, ShoppingBag, RotateCcw, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useCollection, useFirestore } from '@/firebase';
@@ -134,10 +135,7 @@ export default function Home() {
         
         <div className="flex items-center gap-8">
           <span>v1.0.5-production</span>
-          <div className="flex items-center gap-2">
-            <Settings className="w-5 h-5" />
-            <span>Raspberry Pi Kiosk</span>
-          </div>
+          <span className="text-white/40 italic">Managed via Firebase Console</span>
         </div>
       </footer>
     </div>

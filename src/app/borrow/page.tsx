@@ -153,7 +153,7 @@ export default function BorrowPage() {
               <div className="space-y-6">
                 <div className="space-y-4">
                   <Label className="text-xl font-bold">Manual Login</Label>
-                  <Input placeholder="Email Address" className="h-14 md:h-16 text-lg md:text-xl rounded-2xl bg-white" value={email} onFocus={() => setActiveField('email')} readOnly />
+                  <Input placeholder="example@marsu.edu.ph" className="h-14 md:h-16 text-lg md:text-xl rounded-2xl bg-white" value={email} onFocus={() => setActiveField('email')} readOnly />
                 </div>
                 <div className="space-y-4">
                   <Input type="password" placeholder="6-Digit PIN" className="h-14 md:h-16 text-lg md:text-xl rounded-2xl bg-white" value={pin} onFocus={() => setActiveField('pin')} readOnly />

@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ChevronLeft, GraduationCap, UserCog, Mail, Lock, User, QrCode, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, GraduationCap, UserCog, QrCode, CheckCircle2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { KioskKeyboard } from '@/components/kiosk/KioskKeyboard';
 import { QrScannerModal } from '@/components/kiosk/QrScannerModal';
@@ -56,12 +56,23 @@ export default function RegisterPage() {
     e.preventDefault();
     if (!auth || !db) return;
 
-    // Validation
+    // Email Validation
+    if (!formData.email.toLowerCase().endsWith('@marsu.edu.ph')) {
+      toast({ 
+        variant: "destructive", 
+        title: "Invalid Email", 
+        description: "Please use your institutional email (@marsu.edu.ph)." 
+      });
+      return;
+    }
+
+    // QR Registration Check
     if (!formData.qrCode) {
       toast({ variant: "destructive", title: "QR Required", description: "Please register your QR code first." });
       return;
     }
 
+    // PIN Validation
     if (formData.pin.length !== 6 || !/^\d+$/.test(formData.pin)) {
       toast({ variant: "destructive", title: "Invalid PIN", description: "PIN must be exactly 6 digits." });
       return;
@@ -72,19 +83,20 @@ export default function RegisterPage() {
       return;
     }
 
+    // Student ID Validation
     if (role === 'student') {
       if (formData.studentId.length !== 7) {
         toast({ variant: "destructive", title: "Invalid ID", description: "Student ID must be exactly 7 characters." });
         return;
       }
       if (formData.qrCode.toUpperCase() !== formData.studentId.toUpperCase()) {
-        toast({ variant: "destructive", title: "ID Mismatch", description: "QR code must match Student ID." });
+        toast({ variant: "destructive", title: "ID Mismatch", description: "QR code must match your Student ID." });
         return;
       }
     }
 
     try {
-      // Firebase Auth still needs an email/password, we'll use the PIN as the password string
+      // Use PIN as a password string for Firebase Auth (needs at least 6 characters)
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.pin);
       const userRef = doc(db, 'users', userCredential.user.uid);
       
@@ -178,7 +190,7 @@ export default function RegisterPage() {
 
             <div className="space-y-3">
               <Label className="text-xl font-bold">Institutional Email</Label>
-              <Input type="email" placeholder="university.edu.ph" className="h-16 text-2xl rounded-2xl" value={formData.email} onFocus={() => setActiveField('email')} readOnly />
+              <Input type="email" placeholder="example@marsu.edu.ph" className="h-16 text-2xl rounded-2xl" value={formData.email} onFocus={() => setActiveField('email')} readOnly />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -36,3 +36,4 @@ For deployment on a physical kiosk (e.g., Raspberry Pi):
 2. Add your Firebase credentials to a `.env.local` file.
 3. Run `npm install`.
 4. Run `npm run dev`.
+"# labcab-user-kiosk" 

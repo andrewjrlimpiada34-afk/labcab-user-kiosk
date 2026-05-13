@@ -10,9 +10,10 @@ import { motion } from 'framer-motion';
 
 export default function Home() {
   const router = useRouter();
-  const [time, setTime] = useState(new Date());
+  const [time, setTime] = useState<Date | null>(null);
 
   useEffect(() => {
+    setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -58,9 +59,13 @@ export default function Home() {
         <div className="text-right">
           <div className="flex items-center justify-end gap-2 text-lg md:text-2xl font-bold text-slate-700">
             <Clock className="w-4 h-4 md:w-6 h-6 text-primary" />
-            <span>{format(time, 'hh:mm:ss a')}</span>
+            <span suppressHydrationWarning>
+              {time ? format(time, 'hh:mm:ss a') : '--:--:--'}
+            </span>
           </div>
-          <p className="text-slate-400 font-semibold text-xs md:text-base">{format(time, 'EEEE, MMMM do yyyy')}</p>
+          <p className="text-slate-400 font-semibold text-xs md:text-base" suppressHydrationWarning>
+            {time ? format(time, 'EEEE, MMMM do yyyy') : 'Loading...'}
+          </p>
         </div>
       </nav>
 

@@ -1,10 +1,11 @@
 'use client';
 
 export const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "placeholder-api-key",
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "placeholder-auth-domain",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "placeholder-project-id",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "placeholder-storage-bucket",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "placeholder-messaging-sender-id",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "placeholder-app-id",
+  apiKey: "AIzaSyBs3hImCWEk05cl8qudS2SLeF1O5_qP_oU",
+  authDomain: "thesis-labcab.firebaseapp.com",
+  projectId: "thesis-labcab",
+  storageBucket: "thesis-labcab.firebasestorage.app",
+  messagingSenderId: "274010692387",
+  appId: "1:274010692387:web:a4994620ac8bb3f609ca96",
+  measurementId: "G-FMHE2FTE1N"
 };

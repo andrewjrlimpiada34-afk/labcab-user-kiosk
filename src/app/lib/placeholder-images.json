@@ -1,0 +1,29 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "lab-hero",
+      "description": "Clean laboratory glassware and high-tech equipment",
+      "imageUrl": "https://picsum.photos/seed/lab1/1200/800",
+      "imageHint": "laboratory glassware"
+    },
+    {
+      "id": "beaker",
+      "description": "Graduated glass beaker",
+      "imageUrl": "https://picsum.photos/seed/beaker/400/400",
+      "imageHint": "glass beaker"
+    },
+    {
+      "id": "flask",
+      "description": "Erlenmeyer flask with solution",
+      "imageUrl": "https://picsum.photos/seed/flask/400/400",
+      "imageHint": "science flask"
+    },
+    {
+      "id": "microscope",
+      "description": "Precision laboratory microscope",
+      "imageUrl": "https://picsum.photos/seed/micro/400/400",
+      "imageHint": "microscope lab"
+    }
+  ]
+}

@@ -31,13 +31,13 @@
 @layer base {
   * { @apply border-border; }
   body {
-    @apply bg-background text-foreground font-body antialiased selection:bg-primary/20 overflow-hidden h-screen w-screen;
+    @apply bg-background text-foreground font-body antialiased selection:bg-primary/20;
     -webkit-tap-highlight-color: transparent;
   }
 }
 
-.kiosk-page {
-  @apply fixed inset-0 flex flex-col overflow-hidden bg-background;
+.kiosk-container {
+  @apply min-h-screen flex flex-col overflow-x-hidden relative;
 }
 
 .ripple {
@@ -74,15 +74,22 @@
 }
 
 .hg-theme-default .hg-button {
-  @apply h-14 text-xl font-bold rounded-lg border-b-4 border-slate-400 active:border-b-0 active:translate-y-1 bg-white !important;
+  @apply h-12 md:h-14 text-lg md:text-xl font-bold rounded-lg border-b-4 border-slate-400 active:border-b-0 active:translate-y-1 bg-white !important;
 }
 
 .hg-theme-default .hg-button.hg-activeButton {
   @apply bg-slate-100 !important;
 }
 
-/* Custom transitions */
-.page-transition-enter { opacity: 0; transform: translateY(20px); }
-.page-transition-enter-active { opacity: 1; transform: translateY(0); transition: opacity 300ms, transform 300ms; }
-.page-transition-exit { opacity: 1; transform: translateY(0); }
-.page-transition-exit-active { opacity: 0; transform: translateY(-20px); transition: opacity 300ms, transform 300ms; }
+/* Orange Gradient for emphasis */
+.orange-gradient {
+  background: linear-gradient(135deg, #FF6B00 0%, #FF9E00 100%);
+}
+
+.blue-gradient {
+  background: linear-gradient(135deg, #2D46B9 0%, #2D89B9 100%);
+}
+
+.teal-gradient {
+  background: linear-gradient(135deg, #2DB2B9 0%, #2DB97A 100%);
+}

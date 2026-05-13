@@ -12,7 +12,6 @@ interface KioskKeyboardProps {
   onEnter?: () => void;
   onClose: () => void;
   initialValue?: string;
-  layoutName?: string;
 }
 
 export function KioskKeyboard({ 
@@ -20,10 +19,9 @@ export function KioskKeyboard({
   onInput, 
   onEnter, 
   onClose,
-  initialValue = "",
-  layoutName: initialLayout = "default"
+  initialValue = ""
 }: KioskKeyboardProps) {
-  const [layoutName, setLayoutName] = useState(initialLayout);
+  const [layoutName, setLayoutName] = useState("default");
   const keyboard = useRef<any>(null);
 
   useEffect(() => {

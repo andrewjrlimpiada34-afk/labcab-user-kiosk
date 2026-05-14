@@ -8,7 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { ChevronLeft, QrCode, CheckCircle2, ShoppingBag, Plus, Minus, Beaker, FlaskConical, Box, Scissors, Thermometer, Clock, Pipette, Flame, Mail, Lock, UserCircle } from 'lucide-react';
+import { ChevronLeft, QrCode, CheckCircle2, Plus, Minus, Box, Clock, UserCircle } from 'lucide-react';
+
+
 import { KioskKeyboard } from '@/components/kiosk/KioskKeyboard';
 import { QrScannerModal } from '@/components/kiosk/QrScannerModal';
 import { useToast } from '@/hooks/use-toast';
@@ -18,16 +20,10 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
-const APPARATUS_ICONS: Record<string, any> = {
-  'Beaker 250ml': Beaker,
-  'Erlenmeyer Flask': FlaskConical,
-  'Graduated Cylinder': Pipette,
-  'Bunsen Burner': Flame,
-  'Microscope': Box,
-  'Test Tube Rack': Box,
-  'Stirring Rod': Scissors,
-  'Thermometer': Thermometer,
-};
+function isProbablyUrl(value: unknown): value is string {
+  return typeof value === 'string' && /^https?:\/\//i.test(value);
+}
+
 
 export default function BorrowPage() {
   const router = useRouter();
@@ -255,19 +251,37 @@ export default function BorrowPage() {
         {step === 'select' && (
           <motion.div key="select" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8 pb-32">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {apparatusList?.map((item: any) => {
-                const Icon = APPARATUS_ICONS[item.name] || Box;
+{apparatusList?.map((item: any) => {
                 const qty = cart[item.id] || 0;
+                const canShowImage = isProbablyUrl(item?.icon);
+
                 return (
-                  <Card key={item.id} className={`p-6 border-2 transition-all shadow-sm ${qty > 0 ? 'border-primary bg-primary/5 ring-4 ring-primary/10' : 'border-slate-100'}`}>
+                  <Card
+                    key={item.id}
+                    className={`p-6 border-2 transition-all shadow-sm ${qty > 0 ? 'border-primary bg-primary/5 ring-4 ring-primary/10' : 'border-slate-100'}`}
+                  >
                     <div className="flex flex-col items-center gap-4">
-                      <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center ${qty > 0 ? 'bg-primary text-white' : 'bg-slate-100 text-slate-400'}`}>
-                        <Icon className="w-10 h-10 md:w-12 md:h-12" />
+                      <div
+                        className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center overflow-hidden ${qty > 0 ? 'bg-primary text-white' : 'bg-slate-100 text-slate-400'}`}
+                      >
+                        {canShowImage ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={item.icon}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <Box className="w-10 h-10 md:w-12 md:h-12" />
+                        )}
                       </div>
+
                       <div className="text-center">
                         <h3 className="text-lg md:text-xl font-bold line-clamp-1">{item.name}</h3>
                         <p className="text-slate-500 text-sm">{item.stock} available</p>
                       </div>
+
                       <div className="flex items-center gap-6">
                         <Button variant="outline" size="icon" className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2" onClick={() => updateCart(item.id, -1, item.stock)}><Minus /></Button>
                         <span className="text-2xl md:text-3xl font-black w-8 text-center">{qty}</span>

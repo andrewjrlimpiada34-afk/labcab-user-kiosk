@@ -3,22 +3,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import {
-  Microscope,
-  UserPlus,
-  ShoppingBag,
-  RotateCcw,
-  Clock,
-} from 'lucide-react';
+import {Microscope, UserPlus, ShoppingBag, RotateCcw, Clock,} from 'lucide-react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from '@/components/ui/carousel';
+import {Carousel, CarouselContent, CarouselItem,} from '@/components/ui/carousel';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -108,22 +98,25 @@ export default function Home() {
     const id = window.setInterval(() => {
       if (!carouselApiRef.current) return;
 
-      carouselApiRef.current.scrollNext?.();
+      const nextIndex =
+        focusedIndex === heroImages.length - 1
+          ? 0
+          : focusedIndex + 1;
 
-      setFocusedIndex((prev) =>
-        prev === heroImages.length - 1 ? 0 : prev + 1
-      );
+      carouselApiRef.current.scrollTo?.(nextIndex);
+
+      setFocusedIndex(nextIndex);
     }, 5000);
 
     return () => {
       window.clearInterval(id);
     };
-  }, [heroImages.length]);
+  }, [focusedIndex, heroImages.length]);
 
   return (
     <div className="kiosk-container flex flex-col h-screen overflow-hidden bg-white">
 
-      {/* Top Navbar */}
+      {/* Navbar */}
       <nav className="h-24 bg-white border-b px-12 flex items-center justify-between shadow-sm z-10">
 
         {/* Logo */}
@@ -174,12 +167,13 @@ export default function Home() {
           <div className="w-full space-y-12 pb-0">
 
             {/* 3D Carousel */}
-            <div className="w-full flex justify-center overflow-hidden pt-10 pb-4">
+            <div className="w-full flex justify-center overflow-hidden pt-10 pb-2">
 
               <Carousel
                 opts={{
                   loop: true,
                   align: 'center',
+                  skipSnaps: false,
                 }}
                 className="w-full"
                 setApi={(api) => {
@@ -200,9 +194,9 @@ export default function Home() {
                         <CarouselItem
                           key={img.id}
                           className="
-                            basis-[80%]
-                            md:basis-[42%]
-                            lg:basis-[28%]
+                            basis-[82%]
+                            md:basis-[44%]
+                            lg:basis-[30%]
                             pl-0
                             flex
                             justify-center
@@ -223,25 +217,28 @@ export default function Home() {
 
                               rotateY:
                                 offset < 0
-                                  ? 32
+                                  ? 28
                                   : offset > 0
-                                  ? -32
+                                  ? -28
                                   : 0,
 
-                              rotateX: isFocused
-                                ? 0
-                                : 2,
+                              rotateX:
+                                isFocused
+                                  ? 0
+                                  : 3,
 
-                              y: isFocused
-                                ? 0
-                                : 35,
+                              y:
+                                isFocused
+                                  ? 0
+                                  : 30,
 
-                              opacity: isFocused
-                                ? 1
-                                : 0.45,
+                              opacity:
+                                isFocused
+                                  ? 1
+                                  : 0.45,
                             }}
                             transition={{
-                              duration: 0.7,
+                              duration: 0.75,
                               ease: [0.22, 1, 0.36, 1],
                             }}
                             style={{
@@ -250,14 +247,16 @@ export default function Home() {
 
                               perspective: 2500,
 
-                              zIndex: isFocused
-                                ? 100
-                                : 1,
+                              zIndex:
+                                isFocused
+                                  ? 100
+                                  : 1,
                             }}
                             whileHover={{
-                              scale: isFocused
-                                ? 1.02
-                                : 0.82,
+                              scale:
+                                isFocused
+                                  ? 1.02
+                                  : 0.82,
                             }}
                             className="
                               relative
@@ -270,14 +269,17 @@ export default function Home() {
                             <div
                               className="
                                 relative
-                                h-[260px]
-                                md:h-[360px]
-                                lg:h-[420px]
+                                h-[280px]
+                                md:h-[380px]
+                                lg:h-[450px]
                                 w-full
                                 overflow-hidden
-                                rounded-[2.5rem]
-                                bg-black
-                                shadow-[0_35px_80px_rgba(0,0,0,0.35)]
+                                rounded-[2.8rem]
+                                bg-transparent
+                                backdrop-blur-md
+                                border
+                                border-white/20
+                                shadow-[0_35px_80px_rgba(0,0,0,0.20)]
                               "
                             >
                               {/* Image */}
@@ -290,16 +292,13 @@ export default function Home() {
                                 className="
                                   w-full
                                   h-full
-                                  object-cover
+                                  object-contain
                                   transition-transform
                                   duration-700
                                 "
                               />
 
-                              {/* Cinematic Overlay */}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-white/10" />
-
-                              {/* Reflection */}
+                              {/* Elegant Glass Reflection */}
                               <div
                                 className="
                                   absolute
@@ -308,16 +307,19 @@ export default function Home() {
                                 "
                               />
 
-                              {/* Focus Glow */}
+                              {/* Soft Dark Fade */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/10" />
+
+                              {/* Glow */}
                               {isFocused && (
                                 <div
                                   className="
                                     absolute
                                     inset-0
-                                    rounded-[2.5rem]
+                                    rounded-[2.8rem]
                                     ring-2
                                     ring-white/20
-                                    shadow-[0_0_80px_rgba(255,255,255,0.18)]
+                                    shadow-[0_0_100px_rgba(255,255,255,0.18)]
                                   "
                                 />
                               )}
@@ -327,12 +329,12 @@ export default function Home() {
                             <div
                               className="
                                 absolute
-                                left-[10%]
-                                right-[10%]
+                                left-[12%]
+                                right-[12%]
                                 -bottom-8
                                 h-10
                                 rounded-full
-                                bg-black/30
+                                bg-black/20
                                 blur-2xl
                               "
                             />
@@ -385,7 +387,7 @@ export default function Home() {
               </motion.p>
             </div>
 
-            {/* Menu Buttons */}
+            {/* Buttons */}
             <div className="w-full px-4 md:px-8 pb-0">
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -442,15 +444,17 @@ export default function Home() {
 
               </div>
 
-              {/* Bottom Landscape */}
+              {/* Landscape Banner */}
               <div className="mt-10 w-full relative">
 
                 <div
                   className="
                     w-full
-                    h-[220px]
-                    md:h-[280px]
+                    h-[240px]
+                    md:h-[340px]
                     overflow-hidden
+                    rounded-[2rem]
+                    bg-slate-100
                   "
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -458,13 +462,15 @@ export default function Home() {
                     <img
                       src={landscapeImage}
                       alt="landscape-image"
-                      className="w-full h-full object-cover"
+                      className="
+                        w-full
+                        h-full
+                        object-contain
+                      "
                     />
                   ) : (
                     <div className="w-full h-full bg-slate-100" />
                   )}
-
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
                 </div>
               </div>
             </div>

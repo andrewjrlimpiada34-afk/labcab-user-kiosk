@@ -13,8 +13,16 @@ export interface InventoryItem {
   name: string;
   category: string;
   stock: number;
+  /**
+   * In Firestore you currently store either:
+   * - a human-friendly icon key (e.g. "Beaker", "Stirring Rod"), OR
+   * - an image URL (Cloudinary) under the field named `icon`.
+   *
+   * The UI will render an image when this looks like a URL.
+   */
   icon: string;
 }
+
 
 export interface Transaction {
   id: string;

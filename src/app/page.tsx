@@ -135,7 +135,7 @@ export default function Home() {
           <div className="w-full pb-24">
 
             {/* HERO TEXT */}
-            <div className="space-y-4 px-4">
+            <div className="space-y-4 px-4 pt-4">
               <h2 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight text-center">
                 Welcome to LabCab
               </h2>
@@ -190,7 +190,7 @@ export default function Home() {
             </div>
 
             {/* CAROUSEL (unchanged) */}
-            <div className="w-full flex justify-center overflow-hidden pt-10 pb-6">
+            <div className="w-full flex justify-center overflow-hidden">
               <Carousel
                 opts={{ loop: true, align: 'center', skipSnaps: false }}
                 className="w-full"

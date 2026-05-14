@@ -111,7 +111,7 @@ export default function Home() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center p-10 md:p-12 text-center space-y-10 overflow-hidden">
         {/* Home main scroll area (shows up/down scrollbar so images/content can be viewed fully) */}
-        <ScrollArea className="w-full max-w-6xl" style={{ height: 'calc(100vh - 6rem - 4rem - 4rem)' }}>
+<ScrollArea className="w-full max-w-6xl mx-auto" style={{ height: 'calc(100vh - 6rem - 4rem - 4rem)' }}>
           <div className="space-y-10 pr-4">
             {/* Header carousel */}
             <div className="w-full">

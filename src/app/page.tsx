@@ -133,6 +133,17 @@ export default function Home() {
       <main className="flex-1 overflow-hidden">
         <ScrollArea className="h-[calc(100vh-4rem)] w-full">
           <div className="w-full pb-24">
+            
+            {/* HERO TEXT */}
+            <div className="space-y-4 px-4">
+              <h2 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight text-center">
+                Welcome to LabCab
+              </h2>
+
+              <p className="text-lg md:text-2xl text-slate-500 max-w-3xl mx-auto text-center">
+                Smart Laboratory Cabinet for Borrowing and Returning Laboratory Apparatus
+              </p>
+            </div>
 
             {/* CAROUSEL (unchanged) */}
             <div className="w-full flex justify-center overflow-hidden pt-10 pb-6">
@@ -188,16 +199,7 @@ export default function Home() {
               </Carousel>
             </div>
 
-            {/* HERO TEXT */}
-            <div className="space-y-4 px-4">
-              <h2 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight text-center">
-                Welcome to LabCab
-              </h2>
-
-              <p className="text-lg md:text-2xl text-slate-500 max-w-3xl mx-auto text-center">
-                Smart Laboratory Cabinet for Borrowing and Returning Laboratory Apparatus
-              </p>
-            </div>
+      
 
             {/* BUTTONS (FIXED HERE) */}
             <div className="w-full px-4 md:px-8 mt-10">

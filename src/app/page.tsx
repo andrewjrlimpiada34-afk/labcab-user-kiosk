@@ -63,7 +63,7 @@ export default function Home() {
 
   const landscapeImage = useMemo(() => {
     // Landscape image will be the first hero image ("title")
-    return heroImages[0]?.imageUrl ?? PlaceHolderImages[0]?.imageUrl ?? '';
+    return heroImages[3]?.imageUrl ?? PlaceHolderImages[0]?.imageUrl ?? '';
   }, [heroImages]);
 
 

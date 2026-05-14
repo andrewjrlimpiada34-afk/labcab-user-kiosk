@@ -3,12 +3,22 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import {Microscope, UserPlus, ShoppingBag, RotateCcw, Clock,} from 'lucide-react';
+import {
+  Microscope,
+  UserPlus,
+  ShoppingBag,
+  RotateCcw,
+  Clock,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import {Carousel, CarouselContent, CarouselItem,} from '@/components/ui/carousel';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from '@/components/ui/carousel';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -20,15 +30,21 @@ export default function Home() {
   const [focusedIndex, setFocusedIndex] = useState(0);
 
   // Active Borrows Count
-  const transactionsRef = db ? collection(db, 'transactions') : null;
-
-  const activeQuery = transactionsRef
-    ? query(transactionsRef, where('status', '==', 'active'))
+  const transactionsRef = db
+    ? collection(db, 'transactions')
     : null;
 
-  const { data: activeTransactions } = useCollection(activeQuery);
+  const activeQuery = transactionsRef
+    ? query(
+        transactionsRef,
+        where('status', '==', 'active')
+      )
+    : null;
 
-  // Live Clock
+  const { data: activeTransactions } =
+    useCollection(activeQuery);
+
+  // Clock
   useEffect(() => {
     setTime(new Date());
 
@@ -81,7 +97,7 @@ export default function Home() {
     );
   }, []);
 
-  // Landscape Banner
+  // Landscape
   const landscapeImage = useMemo(() => {
     return (
       heroImages[3]?.imageUrl ??
@@ -93,7 +109,7 @@ export default function Home() {
   // Carousel API
   const carouselApiRef = useRef<any>(null);
 
-  // Auto Rotate Carousel
+  // Auto Rotate
   useEffect(() => {
     const id = window.setInterval(() => {
       if (!carouselApiRef.current) return;
@@ -103,20 +119,22 @@ export default function Home() {
           ? 0
           : focusedIndex + 1;
 
-      carouselApiRef.current.scrollTo?.(nextIndex);
+      carouselApiRef.current.scrollTo?.(
+        nextIndex
+      );
 
       setFocusedIndex(nextIndex);
     }, 5000);
 
     return () => {
-      window.clearInterval(id);
+      clearInterval(id);
     };
   }, [focusedIndex, heroImages.length]);
 
   return (
     <div className="kiosk-container flex flex-col h-screen overflow-hidden bg-white">
 
-      {/* Navbar */}
+      {/* NAVBAR */}
       <nav className="h-24 bg-white border-b px-12 flex items-center justify-between shadow-sm z-10">
 
         {/* Logo */}
@@ -153,21 +171,24 @@ export default function Home() {
             suppressHydrationWarning
           >
             {time
-              ? format(time, 'EEEE, MMMM do yyyy')
+              ? format(
+                  time,
+                  'EEEE, MMMM do yyyy'
+                )
               : 'Loading...'}
           </p>
         </div>
       </nav>
 
-      {/* Main Content */}
+      {/* MAIN */}
       <main className="flex-1 overflow-hidden">
 
         <ScrollArea className="h-[calc(100vh-4rem)] w-full">
 
-          <div className="w-full space-y-12 pb-0">
+          <div className="w-full pb-24">
 
-            {/* 3D Carousel */}
-            <div className="w-full flex justify-center overflow-hidden pt-10 pb-2">
+            {/* 3D CAROUSEL */}
+            <div className="w-full flex justify-center overflow-hidden pt-10 pb-6">
 
               <Carousel
                 opts={{
@@ -177,187 +198,173 @@ export default function Home() {
                 }}
                 className="w-full"
                 setApi={(api) => {
-                  carouselApiRef.current = api as any;
+                  carouselApiRef.current =
+                    api as any;
                 }}
               >
                 <CarouselContent className="ml-0 overflow-visible py-10">
 
-                  {heroImages.length > 0 ? (
-                    heroImages.map((img, index) => {
-                      const isFocused =
-                        focusedIndex === index;
+                  {heroImages.map((img, index) => {
+                    const isFocused =
+                      focusedIndex === index;
 
-                      const offset =
-                        index - focusedIndex;
+                    const offset =
+                      index - focusedIndex;
 
-                      return (
-                        <CarouselItem
-                          key={img.id}
+                    return (
+                      <CarouselItem
+                        key={img.id}
+                        className="
+                          basis-[80%]
+                          md:basis-[42%]
+                          lg:basis-[28%]
+                          pl-0
+                          flex
+                          justify-center
+                        "
+                      >
+                        <motion.div
+                          onClick={() => {
+                            setFocusedIndex(
+                              index
+                            );
+
+                            carouselApiRef.current?.scrollTo?.(
+                              index
+                            );
+                          }}
+                          animate={{
+                            scale: isFocused
+                              ? 1
+                              : 0.78,
+
+                            rotateY:
+                              offset < 0
+                                ? 28
+                                : offset > 0
+                                ? -28
+                                : 0,
+
+                            y: isFocused
+                              ? 0
+                              : 28,
+
+                            opacity:
+                              isFocused
+                                ? 1
+                                : 0.45,
+                          }}
+                          transition={{
+                            duration: 0.7,
+                            ease: [
+                              0.22,
+                              1,
+                              0.36,
+                              1,
+                            ],
+                          }}
+                          style={{
+                            transformStyle:
+                              'preserve-3d',
+
+                            perspective: 2500,
+
+                            zIndex:
+                              isFocused
+                                ? 100
+                                : 1,
+                          }}
                           className="
-                            basis-[82%]
-                            md:basis-[44%]
-                            lg:basis-[30%]
-                            pl-0
+                            relative
+                            cursor-pointer
+                            select-none
                             flex
+                            items-center
                             justify-center
                           "
                         >
-                          <motion.div
-                            onClick={() => {
-                              setFocusedIndex(index);
 
-                              carouselApiRef.current?.scrollTo?.(
-                                index
-                              );
-                            }}
-                            animate={{
-                              scale: isFocused
-                                ? 1
-                                : 0.78,
-
-                              rotateY:
-                                offset < 0
-                                  ? 28
-                                  : offset > 0
-                                  ? -28
-                                  : 0,
-
-                              rotateX:
-                                isFocused
-                                  ? 0
-                                  : 3,
-
-                              y:
-                                isFocused
-                                  ? 0
-                                  : 30,
-
-                              opacity:
-                                isFocused
-                                  ? 1
-                                  : 0.45,
-                            }}
-                            transition={{
-                              duration: 0.75,
-                              ease: [0.22, 1, 0.36, 1],
-                            }}
-                            style={{
-                              transformStyle:
-                                'preserve-3d',
-
-                              perspective: 2500,
-
-                              zIndex:
-                                isFocused
-                                  ? 100
-                                  : 1,
-                            }}
-                            whileHover={{
-                              scale:
-                                isFocused
-                                  ? 1.02
-                                  : 0.82,
-                            }}
+                          {/* DYNAMIC IMAGE CONTAINER */}
+                          <div
                             className="
                               relative
-                              cursor-pointer
-                              select-none
+                              flex
+                              items-center
+                              justify-center
+                              rounded-[2.5rem]
+                              bg-white/10
+                              backdrop-blur-md
+                              border
+                              border-white/20
+                              shadow-[0_25px_70px_rgba(0,0,0,0.18)]
+                              p-5
+                              max-w-full
                             "
                           >
-
-                            {/* Card */}
-                            <div
+                            {/* IMAGE */}
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={img.imageUrl}
+                              alt="carousel-image"
+                              loading="eager"
+                              draggable={false}
                               className="
-                                relative
-                                h-[280px]
-                                md:h-[380px]
-                                lg:h-[450px]
-                                w-full
-                                overflow-hidden
-                                rounded-[2.8rem]
-                                bg-transparent
-                                backdrop-blur-md
-                                border
-                                border-white/20
-                                shadow-[0_35px_80px_rgba(0,0,0,0.20)]
+                                max-h-[420px]
+                                max-w-full
+                                object-contain
+                                rounded-[2rem]
                               "
-                            >
-                              {/* Image */}
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={img.imageUrl}
-                                alt="carousel-image"
-                                loading="eager"
-                                draggable={false}
-                                className="
-                                  w-full
-                                  h-full
-                                  object-contain
-                                  transition-transform
-                                  duration-700
-                                "
-                              />
+                            />
 
-                              {/* Elegant Glass Reflection */}
+                            {/* GLOW */}
+                            {isFocused && (
                               <div
                                 className="
                                   absolute
                                   inset-0
-                                  bg-[linear-gradient(120deg,rgba(255,255,255,0.20),transparent_35%)]
+                                  rounded-[2.5rem]
+                                  ring-2
+                                  ring-white/20
+                                  shadow-[0_0_90px_rgba(255,255,255,0.18)]
                                 "
                               />
+                            )}
+                          </div>
 
-                              {/* Soft Dark Fade */}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/10" />
-
-                              {/* Glow */}
-                              {isFocused && (
-                                <div
-                                  className="
-                                    absolute
-                                    inset-0
-                                    rounded-[2.8rem]
-                                    ring-2
-                                    ring-white/20
-                                    shadow-[0_0_100px_rgba(255,255,255,0.18)]
-                                  "
-                                />
-                              )}
-                            </div>
-
-                            {/* Soft Shadow */}
-                            <div
-                              className="
-                                absolute
-                                left-[12%]
-                                right-[12%]
-                                -bottom-8
-                                h-10
-                                rounded-full
-                                bg-black/20
-                                blur-2xl
-                              "
-                            />
-                          </motion.div>
-                        </CarouselItem>
-                      );
-                    })
-                  ) : (
-                    <CarouselItem className="basis-full pl-0">
-                      <div className="h-[320px] w-full bg-slate-200 rounded-[2rem]" />
-                    </CarouselItem>
-                  )}
+                          {/* SHADOW */}
+                          <div
+                            className="
+                              absolute
+                              left-[12%]
+                              right-[12%]
+                              -bottom-8
+                              h-10
+                              rounded-full
+                              bg-black/20
+                              blur-2xl
+                            "
+                          />
+                        </motion.div>
+                      </CarouselItem>
+                    );
+                  })}
 
                 </CarouselContent>
               </Carousel>
             </div>
 
-            {/* Hero Text */}
+            {/* HERO TEXT */}
             <div className="space-y-4 px-4">
 
               <motion.h2
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{
+                  opacity: 0,
+                  y: 20,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
                 className="
                   text-5xl
                   md:text-7xl
@@ -371,9 +378,17 @@ export default function Home() {
               </motion.h2>
 
               <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
+                initial={{
+                  opacity: 0,
+                  y: 20,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  delay: 0.1,
+                }}
                 className="
                   text-lg
                   md:text-2xl
@@ -383,12 +398,14 @@ export default function Home() {
                   text-center
                 "
               >
-                Smart Laboratory Cabinet for Borrowing and Returning Laboratory Apparatus
+                Smart Laboratory Cabinet for
+                Borrowing and Returning
+                Laboratory Apparatus
               </motion.p>
             </div>
 
-            {/* Buttons */}
-            <div className="w-full px-4 md:px-8 pb-0">
+            {/* BUTTONS */}
+            <div className="w-full px-4 md:px-8 mt-10">
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
@@ -404,16 +421,20 @@ export default function Home() {
                       scale: 1,
                     }}
                     transition={{
-                      delay: 0.2 + i * 0.1,
+                      delay:
+                        0.2 + i * 0.1,
                     }}
                   >
                     <Button
                       className={`
                         w-full
-                        h-80
-                        rounded-[2.5rem]
+                        aspect-square
+                        min-h-[320px]
+                        rounded-[3rem]
                         flex
                         flex-col
+                        justify-center
+                        items-center
                         gap-6
                         text-white
                         shadow-2xl
@@ -424,13 +445,15 @@ export default function Home() {
                         hover:brightness-110
                       `}
                       onClick={() =>
-                        router.push(btn.path)
+                        router.push(
+                          btn.path
+                        )
                       }
                     >
                       <btn.icon className="w-24 h-24" />
 
-                      <div className="space-y-1 text-center">
-                        <span className="text-4xl font-black tracking-tight">
+                      <div className="space-y-2 text-center">
+                        <span className="text-4xl font-black tracking-tight block">
                           {btn.label.toUpperCase()}
                         </span>
 
@@ -444,17 +467,21 @@ export default function Home() {
 
               </div>
 
-              {/* Landscape Banner */}
-              <div className="mt-10 w-full relative">
+              {/* LANDSCAPE */}
+              <div className="mt-12 w-full pb-8">
 
                 <div
                   className="
                     w-full
-                    h-[240px]
-                    md:h-[340px]
+                    min-h-[240px]
+                    md:min-h-[340px]
+                    rounded-[2.5rem]
                     overflow-hidden
-                    rounded-[2rem]
                     bg-slate-100
+                    flex
+                    items-center
+                    justify-center
+                    p-4
                   "
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -463,8 +490,8 @@ export default function Home() {
                       src={landscapeImage}
                       alt="landscape-image"
                       className="
-                        w-full
-                        h-full
+                        max-w-full
+                        max-h-[320px]
                         object-contain
                       "
                     />
@@ -473,13 +500,14 @@ export default function Home() {
                   )}
                 </div>
               </div>
+
             </div>
           </div>
         </ScrollArea>
       </main>
 
-      {/* Footer */}
-      <footer className="h-16 bg-slate-900 text-white/60 px-12 flex items-center justify-between text-lg font-medium">
+      {/* FOOTER */}
+      <footer className="h-16 bg-slate-900 text-white/60 px-12 flex items-center justify-between text-lg font-medium shrink-0">
 
         <div className="flex gap-8">
 
@@ -488,22 +516,28 @@ export default function Home() {
 
             <span>
               Active Borrows:{' '}
-              {activeTransactions?.length || 0}
+              {activeTransactions?.length ||
+                0}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-orange-500 rounded-full" />
 
-            <span>Overdue Items: 0</span>
+            <span>
+              Overdue Items: 0
+            </span>
           </div>
         </div>
 
         <div className="flex items-center gap-8">
-          <span>v1.0.5-production</span>
+          <span>
+            v1.0.5-production
+          </span>
 
           <span className="text-white/40 italic">
-            A Cabinet that knows what&apos;s Inside!
+            A Cabinet that knows
+            what&apos;s Inside!
           </span>
         </div>
       </footer>

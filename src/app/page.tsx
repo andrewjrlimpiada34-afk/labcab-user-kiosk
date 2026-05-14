@@ -70,6 +70,7 @@ export default function Home() {
   // Hero Images
   const heroImages = useMemo(() => {
     const ids = new Set([
+      'team',
       'highlights',
       'tagline',
       'title',

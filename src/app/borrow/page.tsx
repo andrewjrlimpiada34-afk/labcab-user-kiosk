@@ -351,22 +351,48 @@ export default function BorrowPage() {
           <motion.div key="time" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-4xl mx-auto space-y-8">
             <h2 className="text-3xl md:text-4xl font-black text-center text-slate-800">Set Return Time</h2>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {(['1 Hour', '2 Hours', '3 Hours', 'Custom Time (Within the Day)'] as const).map(t => (
+            <div className="space-y-6">
+              {/* First row: 1 Hour | 2 Hours | 3 Hours */}
+              <div className="grid grid-cols-3 gap-6">
+                {(['1 Hour', '2 Hours', '3 Hours'] as const).map((t) => (
+                  <Button
+                    key={t}
+                    variant={returnTime === t ? 'default' : 'outline'}
+                    className={`h-32 rounded-[2rem] text-xl md:text-2xl font-black flex flex-col gap-2 transition-all ${
+                      returnTime === t ? 'scale-105 shadow-xl ring-4 ring-primary/10' : ''
+                    }`}
+                    onClick={() => {
+                      setReturnTime(t);
+                      setIsCustomTimeValid(true);
+                    }}
+                  >
+                    <Clock className="w-8 h-8" />
+                    {t}
+                  </Button>
+                ))}
+              </div>
+
+              {/* Second row: Custom Time below */}
+              <div>
                 <Button
-                  key={t}
-                  variant={returnTime === t ? 'default' : 'outline'}
-                  className={`h-32 rounded-[2rem] text-xl md:text-2xl font-black flex flex-col gap-2 transition-all ${returnTime === t ? 'scale-105 shadow-xl ring-4 ring-primary/10' : ''}`}
+                  variant={
+                    returnTime === 'Custom Time (Within the Day)' ? 'default' : 'outline'
+                  }
+                  className={`h-32 w-full rounded-[2rem] text-xl md:text-2xl font-black flex flex-col gap-2 transition-all ${
+                    returnTime === 'Custom Time (Within the Day)'
+                      ? 'scale-105 shadow-xl ring-4 ring-primary/10'
+                      : ''
+                  }`}
                   onClick={() => {
-                    setReturnTime(t);
-                    if (t !== 'Custom Time (Within the Day)') setIsCustomTimeValid(true);
+                    setReturnTime('Custom Time (Within the Day)');
                   }}
                 >
                   <Clock className="w-8 h-8" />
-                  {t}
+                  Custom Time
                 </Button>
-              ))}
+              </div>
             </div>
+
 
             {returnTime === 'Custom Time (Within the Day)' && (
               <div className="space-y-3 bg-white border-2 border-slate-100 rounded-[2.5rem] p-6 shadow-sm">

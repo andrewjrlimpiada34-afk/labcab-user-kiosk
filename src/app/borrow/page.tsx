@@ -34,7 +34,16 @@ export default function BorrowPage() {
   const [step, setStep] = useState<'auth' | 'select' | 'review' | 'time' | 'confirm' | 'success'>('auth');
   const [user, setUser] = useState<any>(null);
   const [cart, setCart] = useState<Record<string, number>>({});
-  const [returnTime, setReturnTime] = useState<string>('End of Day');
+  type ReturnTimeOption = '1 Hour' | '2 Hours' | '3 Hours' | 'Custom Time (Within the Day)';
+
+  const [returnTime, setReturnTime] = useState<ReturnTimeOption>('1 Hour');
+  const [customTime, setCustomTime] = useState<string>(''); // HH:MM (24h)
+
+
+  const [isCustomTimeValid, setIsCustomTimeValid] = useState<boolean>(true);
+
+
+
   
   const [email, setEmail] = useState('');
   const [pin, setPin] = useState('');
@@ -114,17 +123,30 @@ export default function BorrowPage() {
 
   const finalizeBorrowing = async () => {
     if (!db || !user) return;
-    
+
     const items = Object.entries(cart).map(([id, qty]) => {
       const item = apparatusList?.find(a => a.id === id);
       return { itemId: id, name: item?.name, quantity: qty };
     });
 
     const deadline = new Date();
-    if (returnTime === '1 Hour') deadline.setHours(deadline.getHours() + 1);
-    else if (returnTime === '2 Hours') deadline.setHours(deadline.getHours() + 2);
-    else if (returnTime === '3 Hours') deadline.setHours(deadline.getHours() + 3);
-    else deadline.setHours(17, 0, 0); 
+
+    if (returnTime === '1 Hour') {
+      deadline.setHours(deadline.getHours() + 1);
+    } else if (returnTime === '2 Hours') {
+      deadline.setHours(deadline.getHours() + 2);
+    } else if (returnTime === '3 Hours') {
+      deadline.setHours(deadline.getHours() + 3);
+    } else {
+
+      // Custom Time (Within the Day)
+      const [hhStr, mmStr] = customTime.split(':');
+      const hh = Number(hhStr);
+      const mm = Number(mmStr);
+      deadline.setHours(hh, mm, 0, 0);
+    }
+
+
 
     const transactionData = {
       userId: user.id,
@@ -328,17 +350,81 @@ export default function BorrowPage() {
         {step === 'time' && (
           <motion.div key="time" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-4xl mx-auto space-y-8">
             <h2 className="text-3xl md:text-4xl font-black text-center text-slate-800">Set Return Time</h2>
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {['1 Hour', '2 Hours', '3 Hours', 'End of Day'].map(t => (
-                <Button key={t} variant={returnTime === t ? 'default' : 'outline'} className={`h-32 rounded-[2rem] text-xl md:text-2xl font-black flex flex-col gap-2 transition-all ${returnTime === t ? 'scale-105 shadow-xl ring-4 ring-primary/10' : ''}`} onClick={() => setReturnTime(t)}>
+              {(['1 Hour', '2 Hours', '3 Hours', 'Custom Time (Within the Day)'] as const).map(t => (
+                <Button
+                  key={t}
+                  variant={returnTime === t ? 'default' : 'outline'}
+                  className={`h-32 rounded-[2rem] text-xl md:text-2xl font-black flex flex-col gap-2 transition-all ${returnTime === t ? 'scale-105 shadow-xl ring-4 ring-primary/10' : ''}`}
+                  onClick={() => {
+                    setReturnTime(t);
+                    if (t !== 'Custom Time (Within the Day)') setIsCustomTimeValid(true);
+                  }}
+                >
                   <Clock className="w-8 h-8" />
                   {t}
                 </Button>
               ))}
             </div>
-            <Button className="w-full h-20 text-2xl font-black rounded-2xl mt-8 blue-gradient text-white border-none" onClick={() => setStep('confirm')}>PROCEED</Button>
+
+            {returnTime === 'Custom Time (Within the Day)' && (
+              <div className="space-y-3 bg-white border-2 border-slate-100 rounded-[2.5rem] p-6 shadow-sm">
+                <Label className="text-slate-400 text-xs md:text-sm uppercase font-bold tracking-widest">Custom Time (Today, not in the past)</Label>
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                  <div className="flex-1">
+                    <Input
+                      type="time"
+                      value={customTime}
+                      onChange={(e) => {
+                        setCustomTime(e.target.value);
+                        setIsCustomTimeValid(true);
+                      }}
+                      className={`h-16 text-xl rounded-2xl bg-slate-50 border-2 px-4 ${isCustomTimeValid ? 'border-transparent' : 'border-red-500'} disabled:opacity-60`}
+                    />
+                  </div>
+                  <div className="text-sm text-slate-500">
+                    {isCustomTimeValid ? (
+                      <span>Pick a time later than now</span>
+                    ) : (
+                      <span className="text-red-600 font-bold">Past times aren’t allowed</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <Button
+              className="w-full h-20 text-2xl font-black rounded-2xl mt-8 blue-gradient text-white border-none"
+              onClick={() => {
+                if (returnTime === 'Custom Time (Within the Day)') {
+                  const [hhStr, mmStr] = customTime.split(':');
+                  const hh = Number(hhStr);
+                  const mm = Number(mmStr);
+                  const now = new Date();
+                  const candidate = new Date(now);
+                  candidate.setHours(hh, mm, 0, 0);
+
+                  const valid = Number.isFinite(hh) && Number.isFinite(mm) && customTime.length === 5 && candidate.toDateString() === now.toDateString() && candidate.getTime() >= now.getTime();
+
+                  if (!valid) {
+                    setIsCustomTimeValid(false);
+                    toast({
+                      variant: 'destructive',
+                      title: 'Invalid custom time',
+                      description: 'Choose a time within today that is not in the past.'
+                    });
+                    return;
+                  }
+                }
+                setStep('confirm');
+              }}
+            >
+              PROCEED
+            </Button>
           </motion.div>
         )}
+
 
         {step === 'confirm' && (
           <motion.div key="confirm" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-2xl mx-auto space-y-8">

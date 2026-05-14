@@ -133,7 +133,7 @@ export default function Home() {
       <main className="flex-1 overflow-hidden">
         <ScrollArea className="h-[calc(100vh-4rem)] w-full">
           <div className="w-full pb-24">
-            
+
             {/* HERO TEXT */}
             <div className="space-y-4 px-4">
               <h2 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight text-center">
@@ -143,6 +143,50 @@ export default function Home() {
               <p className="text-lg md:text-2xl text-slate-500 max-w-3xl mx-auto text-center">
                 Smart Laboratory Cabinet for Borrowing and Returning Laboratory Apparatus
               </p>
+            </div>
+
+            {/* BUTTONS (FIXED HERE) */}
+            <div className="w-full px-4 md:px-8 mt-10">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-10 place-items-center">
+
+                {menuButtons.map((btn, i) => (
+                  <motion.div
+                    key={btn.label}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2 + i * 0.1 }}
+                    className="flex justify-center"
+                  >
+                    <Button
+                      onClick={() => router.push(btn.path)}
+                      className={`
+                        w-[320px]
+                        h-[320px]
+                        flex-none
+                        rounded-[3rem]
+                        flex flex-col items-center justify-center gap-6
+                        text-white shadow-2xl
+                        transition-all active:scale-95
+                        border-none
+                        ${btn.color}
+                        hover:brightness-110
+                      `}
+                    >
+                      <btn.icon className="w-20 h-20" />
+
+                      <div className="space-y-2 text-center">
+                        <span className="text-3xl font-black tracking-tight block">
+                          {btn.label.toUpperCase()}
+                        </span>
+                        <p className="text-white/70 text-base font-medium">
+                          {btn.desc}
+                        </p>
+                      </div>
+                    </Button>
+                  </motion.div>
+                ))}
+
+              </div>
             </div>
 
             {/* CAROUSEL (unchanged) */}
@@ -197,68 +241,6 @@ export default function Home() {
                   })}
                 </CarouselContent>
               </Carousel>
-            </div>
-
-      
-
-            {/* BUTTONS (FIXED HERE) */}
-            <div className="w-full px-4 md:px-8 mt-10">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-10 place-items-center">
-
-                {menuButtons.map((btn, i) => (
-                  <motion.div
-                    key={btn.label}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.2 + i * 0.1 }}
-                    className="flex justify-center"
-                  >
-                    <Button
-                      onClick={() => router.push(btn.path)}
-                      className={`
-                        w-[320px]
-                        h-[320px]
-                        flex-none
-                        rounded-[3rem]
-                        flex flex-col items-center justify-center gap-6
-                        text-white shadow-2xl
-                        transition-all active:scale-95
-                        border-none
-                        ${btn.color}
-                        hover:brightness-110
-                      `}
-                    >
-                      <btn.icon className="w-20 h-20" />
-
-                      <div className="space-y-2 text-center">
-                        <span className="text-3xl font-black tracking-tight block">
-                          {btn.label.toUpperCase()}
-                        </span>
-                        <p className="text-white/70 text-base font-medium">
-                          {btn.desc}
-                        </p>
-                      </div>
-                    </Button>
-                  </motion.div>
-                ))}
-
-              </div>
-            </div>
-
-            {/* LANDSCAPE (unchanged) */}
-            <div className="mt-12 w-full pb-8 px-4">
-              <div className="w-full min-h-[240px] md:min-h-[340px] rounded-[2.5rem] overflow-hidden bg-slate-100 flex items-center justify-center p-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                {landscapeImage ? (
-                  <img
-                    src={landscapeImage}
-                    alt="landscape-image"
-                    className="max-w-full max-h-[320px] object-contain"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-slate-100" />
-                )}
-              </div>
             </div>
 
           </div>

@@ -1,3 +1,20 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "title",
+      "imageUrl": "https://res.cloudinary.com/dexzy5anc/image/upload/v1778738038/title_ryvich.png"
+    },
+    {
+      "id": "highlights",
+      "imageUrl": "https://res.cloudinary.com/dexzy5anc/image/upload/v1778738044/highlights_ppxijx.png"
+    },
+    {
+      "id": "tagline",
+      "imageUrl": "https://res.cloudinary.com/dexzy5anc/image/upload/v1778738044/tagline_kymtt4.png"
+    },
+    {
+      "id": "team",
+      "imageUrl": "https://res.cloudinary.com/dexzy5anc/image/upload/v1778738045/team_umepp5.png"
+    }
+  ]
 }

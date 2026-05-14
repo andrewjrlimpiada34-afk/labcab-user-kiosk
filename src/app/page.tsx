@@ -55,15 +55,17 @@ export default function Home() {
   );
 
   const heroImages = useMemo(() => {
-    // Prefer the “lab-like” assets from placeholder-images.json
-    const ids = new Set(['lab-hero', 'beaker', 'flask', 'microscope']);
+    // IDs you keep in placeholder-images.json
+    // (title, highlights, tagline, team)
+    const ids = new Set(['team', 'highlights', 'tagline', 'title']);
     return PlaceHolderImages.filter((img) => ids.has(img.id));
   }, []);
 
   const landscapeImage = useMemo(() => {
-    // Pick a single wide/hero-ish URL. If not available, just use the first hero.
+    // Landscape image will be the first hero image ("title")
     return heroImages[0]?.imageUrl ?? PlaceHolderImages[0]?.imageUrl ?? '';
   }, [heroImages]);
+
 
   const carouselApiRef = useRef<{ scrollNext: () => void } | null>(null);
 

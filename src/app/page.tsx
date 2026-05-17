@@ -160,12 +160,16 @@ export default function Home() {
                     <Button
                       asChild
                       className={`
-                        w-[320px]
-                        h-[320px]
+                        w-[300px]
+                        h-[300px]
+                        md:w-[340px]
+                        md:h-[340px]
+                        lg:w-[360px]
+                        lg:h-[360px]
                         flex-none
                         select-none
                         touch-manipulation
-                        rounded-[3rem]
+                        rounded-[2.25rem]
                         flex flex-col items-center justify-center gap-6
                         text-white shadow-2xl
                         transition-all
@@ -187,9 +191,9 @@ export default function Home() {
                         onPointerUp={() => setPressedPath(null)}
                         onPointerCancel={() => setPressedPath(null)}
                         onPointerLeave={() => setPressedPath((current) => (current === btn.path ? null : current))}
-                        className="flex h-full w-full flex-col items-center justify-center gap-6 rounded-[3rem]"
+                        className="flex h-full w-full flex-col items-center justify-center gap-5 rounded-[2.25rem] px-6 text-center"
                       >
-                        <btn.icon className="w-60 h-60" />
+                        <btn.icon className="h-24 w-24 md:h-28 md:w-28 lg:h-32 lg:w-32" />
 
                         <div className="space-y-2 text-center">
                           <span className="text-3xl font-black tracking-tight block">

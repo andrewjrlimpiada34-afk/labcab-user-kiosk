@@ -28,7 +28,7 @@ export default function EnrollPage() {
   return (
     <div className="min-h-screen bg-background p-6">
       <header className="max-w-4xl mx-auto flex items-center justify-between mb-12">
-        <Button variant="ghost" className="rounded-full h-12 w-12" onClick={() => router.push('/')}>
+        <Button variant="ghost" className="rounded-full h-12 w-12 bg-primary text-white shadow-lg hover:bg-primary/90" onClick={() => router.push('/')}>
           <ChevronLeft className="w-8 h-8" />
         </Button>
         <h1 className="text-2xl font-bold text-primary">LabCab Enrollment</h1>

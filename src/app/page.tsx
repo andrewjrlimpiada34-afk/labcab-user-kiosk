@@ -193,7 +193,7 @@ export default function Home() {
                         onPointerLeave={() => setPressedPath((current) => (current === btn.path ? null : current))}
                         className="flex h-full w-full flex-col items-center justify-center gap-5 rounded-[2.25rem] px-6 text-center"
                       >
-                        <btn.icon className="h-24 w-24 md:h-28 md:w-28 lg:h-32 lg:w-32" />
+                        <btn.icon className="h-28 w-28 md:h-32 md:w-32 lg:h-36 lg:w-36" />
 
                         <div className="space-y-2 text-center">
                           <span className="text-3xl font-black tracking-tight block">

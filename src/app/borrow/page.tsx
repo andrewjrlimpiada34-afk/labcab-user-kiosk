@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ function isProbablyUrl(value: unknown): value is string {
 
 
 export default function BorrowPage() {
+  const QR_TIMEOUT_SECONDS = 120;
   const router = useRouter();
   const { toast } = useToast();
   const db = useFirestore();
@@ -48,11 +49,52 @@ export default function BorrowPage() {
   const [email, setEmail] = useState('');
   const [pin, setPin] = useState('');
   const [activeField, setActiveField] = useState<'email' | 'pin' | null>(null);
+  const [authMethod, setAuthMethod] = useState<'qr' | 'manual'>('qr');
+  const [qrCountdown, setQrCountdown] = useState(QR_TIMEOUT_SECONDS);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   const apparatusRef = useMemo(() => db ? collection(db, 'apparatus') : null, [db]);
   const { data: apparatusList } = useCollection(apparatusRef);
+
+  useEffect(() => {
+    if (step !== 'auth') {
+      setIsScannerOpen(false);
+      return;
+    }
+
+    if (authMethod !== 'qr') {
+      setIsScannerOpen(false);
+      return;
+    }
+
+    setIsScannerOpen(true);
+    setQrCountdown(QR_TIMEOUT_SECONDS);
+
+    const countdownId = window.setInterval(() => {
+      setQrCountdown((current) => {
+        if (current <= 1) {
+          window.clearInterval(countdownId);
+          setAuthMethod('manual');
+          setIsScannerOpen(false);
+          toast({
+            title: 'QR Timeout',
+            description: 'No scan detected after 2 minutes. Please log in with your email and PIN.',
+          });
+          return 0;
+        }
+
+        return current - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(countdownId);
+  }, [QR_TIMEOUT_SECONDS, authMethod, step, toast]);
+
+  const switchToManual = () => {
+    setAuthMethod('manual');
+    setIsScannerOpen(false);
+  };
 
   const handleAuth = async () => {
     if (!auth || !db || isAuthenticating) return;
@@ -71,6 +113,7 @@ export default function BorrowPage() {
       
       if (userSnap.exists()) {
         setUser({ id: userSnap.id, ...userSnap.data() });
+        setIsScannerOpen(false);
         setStep('select');
         toast({ title: "Authenticated", description: `Welcome back, ${userSnap.data().firstName}` });
       } else {
@@ -95,6 +138,7 @@ export default function BorrowPage() {
       if (!userSnap.empty) {
         const userData = userSnap.docs[0].data();
         setUser({ id: userSnap.docs[0].id, ...userData });
+        setIsScannerOpen(false);
         setStep('select');
         toast({ title: "Identity Verified", description: `Welcome, ${userData.firstName} ${userData.lastName}` });
       } else {
@@ -190,7 +234,7 @@ export default function BorrowPage() {
   return (
     <div className="kiosk-container p-6 md:p-12 overflow-y-auto min-h-screen bg-slate-50">
       <header className="flex items-center justify-between mb-8 md:mb-12">
-        <Button variant="ghost" className="rounded-full w-14 h-14 md:w-20 md:h-20" onClick={() => router.push('/')}>
+        <Button variant="ghost" className="rounded-full w-14 h-14 md:w-20 md:h-20 bg-primary text-white shadow-lg hover:bg-primary/90" onClick={() => router.push('/')}>
           <ChevronLeft className="w-8 h-8 md:w-12 md:h-12" />
         </Button>
         <h1 className="text-3xl md:text-5xl font-black text-primary tracking-tight">Borrow Apparatus</h1>
@@ -202,29 +246,50 @@ export default function BorrowPage() {
           <motion.div key="auth" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-5xl mx-auto w-full space-y-12">
             <div className="text-center space-y-4">
               <h2 className="text-4xl md:text-5xl font-black text-slate-800">Identity Verification</h2>
-              <p className="text-slate-500 text-xl">Scan your QR or Login manually to continue</p>
+              <p className="text-slate-500 text-xl">
+                {authMethod === 'qr'
+                  ? 'Scanner opens automatically. If no scan is detected within 2 minutes, manual login will appear.'
+                  : 'QR scan timed out. Continue with your email and PIN.'}
+              </p>
             </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              <div className="space-y-6">
-                <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 flex flex-col items-center gap-8 h-full">
-                  <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
-                    <QrCode className="w-12 h-12 text-primary" />
+            {authMethod === 'qr' && (
+              <div className="max-w-3xl mx-auto">
+                <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-xl border border-slate-100 flex flex-col items-center gap-8 text-center">
+                  <div className="w-28 h-28 bg-primary/10 rounded-full flex items-center justify-center">
+                    <QrCode className="w-14 h-14 text-primary" />
                   </div>
-                  <div className="text-center space-y-2">
-                    <h3 className="text-2xl font-bold">QR Fast Access</h3>
-                    <p className="text-slate-500">Scan your ID QR code</p>
+                  <div className="space-y-3">
+                    <h3 className="text-3xl md:text-4xl font-black text-slate-800">QR First Login</h3>
+                    <p className="text-slate-500 text-lg md:text-xl">Point your ID QR code at the camera to continue borrowing.</p>
                   </div>
-                  <Button 
-                    className="w-full h-24 text-2xl font-black rounded-3xl blue-gradient text-white border-none mt-auto shadow-lg" 
-                    onClick={() => setIsScannerOpen(true)}
-                    disabled={isAuthenticating}
-                  >
-                    {isAuthenticating ? 'VERIFYING...' : 'OPEN SCANNER'}
-                  </Button>
+                  <div className="w-full max-w-md rounded-[2rem] bg-slate-100 px-6 py-5">
+                    <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Manual fallback in</p>
+                    <p className="text-4xl md:text-5xl font-black text-primary">
+                      {Math.floor(qrCountdown / 60)}:{String(qrCountdown % 60).padStart(2, '0')}
+                    </p>
+                  </div>
+                  <div className="flex w-full max-w-xl flex-col gap-4 md:flex-row">
+                    <Button 
+                      className="flex-1 h-20 text-xl font-black rounded-3xl blue-gradient text-white border-none shadow-lg" 
+                      onClick={() => setIsScannerOpen(true)}
+                      disabled={isAuthenticating}
+                    >
+                      {isAuthenticating ? 'VERIFYING...' : 'REOPEN SCANNER'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-20 text-xl font-black rounded-3xl border-2 border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                      onClick={switchToManual}
+                    >
+                      USE PASSWORD NOW
+                    </Button>
+                  </div>
                 </div>
               </div>
+            )}
 
+            {authMethod === 'manual' && (
+              <div className="grid grid-cols-1 gap-12">
               <div className="space-y-6">
                 <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 space-y-6 h-full flex flex-col">
                   <div className="flex items-center gap-4 mb-2">
@@ -267,6 +332,7 @@ export default function BorrowPage() {
                 </div>
               </div>
             </div>
+            )}
           </motion.div>
         )}
 

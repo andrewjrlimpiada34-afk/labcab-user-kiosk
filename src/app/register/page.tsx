@@ -122,7 +122,7 @@ export default function RegisterPage() {
   return (
     <div className="kiosk-container p-6 md:p-12 overflow-y-auto min-h-screen bg-slate-50">
       <header className="flex items-center justify-between mb-12">
-        <Button variant="ghost" className="rounded-full w-14 h-14 md:w-20 md:h-20" onClick={() => step === 'form' ? setStep('type') : router.push('/')}>
+        <Button variant="ghost" className="rounded-full w-14 h-14 md:w-20 md:h-20 bg-primary text-white shadow-lg hover:bg-primary/90" onClick={() => step === 'form' ? setStep('type') : router.push('/')}>
           <ChevronLeft className="w-8 h-8 md:w-12 md:h-12" />
         </Button>
         <h1 className="text-3xl md:text-5xl font-black text-primary tracking-tight">Registration</h1>
@@ -135,11 +135,11 @@ export default function RegisterPage() {
             <h2 className="text-3xl md:text-4xl font-bold text-slate-700">Select Account Type</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
               <Button variant="outline" className="h-64 md:h-96 rounded-[2.5rem] md:rounded-[3rem] flex flex-col gap-6 text-slate-700 border-4 hover:border-primary hover:bg-primary/5 shadow-xl transition-all active:scale-95" onClick={() => { setRole('teacher'); setStep('form'); }}>
-                <UserCog className="w-24 h-24 md:w-32 md:h-32 text-primary" />
+                <UserCog className="w-28 h-28 md:w-36 md:h-36 text-primary" />
                 <span className="text-3xl md:text-4xl font-black">TEACHER</span>
               </Button>
               <Button variant="outline" className="h-64 md:h-96 rounded-[2.5rem] md:rounded-[3rem] flex flex-col gap-6 text-slate-700 border-4 hover:border-secondary hover:bg-secondary/5 shadow-xl transition-all active:scale-95" onClick={() => { setRole('student'); setStep('form'); }}>
-                <GraduationCap className="w-24 h-24 md:w-32 md:h-32 text-secondary" />
+                <GraduationCap className="w-28 h-28 md:w-36 md:h-36 text-secondary" />
                 <span className="text-3xl md:text-4xl font-black">STUDENT</span>
               </Button>
             </div>

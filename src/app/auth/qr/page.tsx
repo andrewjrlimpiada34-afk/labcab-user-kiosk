@@ -22,7 +22,7 @@ export default function QrScanPage() {
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-white">
       <div className="absolute top-8 left-8">
-        <Button variant="ghost" className="text-white hover:bg-white/10" onClick={() => router.back()}>
+        <Button variant="ghost" className="rounded-full w-12 h-12 p-0 bg-primary text-white shadow-lg hover:bg-primary/90" onClick={() => router.back()}>
           <ChevronLeft className="w-8 h-8" />
         </Button>
       </div>

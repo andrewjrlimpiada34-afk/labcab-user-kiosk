@@ -57,7 +57,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <div className="p-8 flex items-center">
-        <Button variant="ghost" className="rounded-full w-12 h-12 p-0" onClick={() => router.back()}>
+        <Button variant="ghost" className="rounded-full w-12 h-12 p-0 bg-primary text-white shadow-lg hover:bg-primary/90" onClick={() => router.back()}>
           <ChevronLeft className="w-8 h-8" />
         </Button>
       </div>

@@ -146,7 +146,7 @@ export default function Home() {
             </div>
 
             {/* BUTTONS (FIXED HERE) */}
-            <div className="w-full px-4 md:px-8 mt-10">
+            <div className="w-full px-4 md:px-8 mt-10 relative z-20">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-10 place-items-center">
 
                 {menuButtons.map((btn, i) => (

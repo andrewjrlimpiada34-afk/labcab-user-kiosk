@@ -1,7 +1,7 @@
 "use client";
 
+import Link from 'next/link';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Microscope,
@@ -23,11 +23,11 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function Home() {
-  const router = useRouter();
   const db = useFirestore();
 
   const [time, setTime] = useState<Date | null>(null);
   const [focusedIndex, setFocusedIndex] = useState(0);
+  const [pressedPath, setPressedPath] = useState<string | null>(null);
 
   const transactionsRef = db ? collection(db, 'transactions') : null;
 
@@ -158,7 +158,7 @@ export default function Home() {
                     className="flex justify-center"
                   >
                     <Button
-                      onClick={() => router.push(btn.path)}
+                      asChild
                       className={`
                         w-[320px]
                         h-[320px]
@@ -177,18 +177,29 @@ export default function Home() {
                         ${btn.color}
                         focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/30
                         sm:pointer-events-auto
+                        ${pressedPath === btn.path ? 'scale-[0.985] brightness-95' : ''}
                       `}
                     >
-                      <btn.icon className="w-20 h-20" />
+                      <Link
+                        href={btn.path}
+                        prefetch
+                        onPointerDown={() => setPressedPath(btn.path)}
+                        onPointerUp={() => setPressedPath(null)}
+                        onPointerCancel={() => setPressedPath(null)}
+                        onPointerLeave={() => setPressedPath((current) => (current === btn.path ? null : current))}
+                        className="flex h-full w-full flex-col items-center justify-center gap-6 rounded-[3rem]"
+                      >
+                        <btn.icon className="w-60 h-60" />
 
-                      <div className="space-y-2 text-center">
-                        <span className="text-3xl font-black tracking-tight block">
-                          {btn.label.toUpperCase()}
-                        </span>
-                        <p className="text-white/70 text-base font-medium">
-                          {btn.desc}
-                        </p>
-                      </div>
+                        <div className="space-y-2 text-center">
+                          <span className="text-3xl font-black tracking-tight block">
+                            {btn.label.toUpperCase()}
+                          </span>
+                          <p className="text-white/70 text-base font-medium">
+                            {btn.desc}
+                          </p>
+                        </div>
+                      </Link>
                     </Button>
                   </motion.div>
                 ))}

@@ -4,7 +4,7 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+:root {
     --background: 220 33% 97%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
@@ -25,6 +25,11 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 231 61% 45%;
     --radius: 1rem;
+    --kiosk-max-width: 1280px;
+    --kiosk-page-padding: clamp(0.75rem, 1.8vw, 1.5rem);
+    --kiosk-section-gap: clamp(0.75rem, 1.5vw, 1.25rem);
+    --kiosk-key-height: clamp(2.5rem, 4vw, 3.5rem);
+    --kiosk-key-font: clamp(0.9rem, 1.4vw, 1.15rem);
   }
 }
 
@@ -33,11 +38,15 @@
   body {
     @apply bg-background text-foreground font-body antialiased selection:bg-primary/20;
     -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
   }
 }
 
 .kiosk-container {
   @apply min-h-screen flex flex-col overflow-x-hidden relative;
+  width: 100%;
+  max-width: var(--kiosk-max-width);
+  margin-inline: auto;
 }
 
 .ripple {
@@ -69,16 +78,67 @@
 }
 
 /* Onscreen Keyboard Styles */
-.hg-theme-default {
-  @apply bg-slate-200 p-2 shadow-2xl border-t border-slate-300 !important;
+.hg-theme-default.kiosk-hg {
+  @apply bg-transparent p-0 shadow-none border-0 !important;
 }
 
-.hg-theme-default .hg-button {
-  @apply h-12 md:h-14 text-lg md:text-xl font-bold rounded-lg border-b-4 border-slate-400 active:border-b-0 active:translate-y-1 bg-white !important;
+.hg-theme-default.kiosk-hg .hg-rows {
+  @apply space-y-2 md:space-y-2.5 !important;
 }
 
-.hg-theme-default .hg-button.hg-activeButton {
-  @apply bg-slate-100 !important;
+.hg-theme-default.kiosk-hg .hg-row {
+  @apply flex justify-center gap-1.5 md:gap-2 !important;
+}
+
+.hg-theme-default.kiosk-hg .hg-button {
+  height: var(--kiosk-key-height) !important;
+  font-size: var(--kiosk-key-font) !important;
+  @apply m-0 min-w-0 rounded-2xl border border-slate-300 bg-white font-black text-slate-700 shadow-sm transition-all active:translate-y-[1px] !important;
+}
+
+.hg-theme-default.kiosk-hg .hg-button.hg-activeButton {
+  @apply bg-slate-100 shadow-inner !important;
+}
+
+.hg-theme-default.kiosk-hg .hg-button.hg-key-wide {
+  @apply min-w-[4.5rem] px-3 text-[0.78rem] sm:text-sm md:min-w-[6rem] !important;
+}
+
+.hg-theme-default.kiosk-hg .hg-button.hg-key-space {
+  @apply min-w-[12rem] px-4 md:min-w-[20rem] !important;
+}
+
+@media (max-width: 1024px) {
+  .hg-theme-default.kiosk-hg .hg-button.hg-key-space {
+    min-width: 11rem !important;
+  }
+}
+
+@media (max-width: 820px) {
+  :root {
+    --kiosk-page-padding: 0.75rem;
+    --kiosk-section-gap: 0.75rem;
+    --kiosk-key-height: 2.8rem;
+    --kiosk-key-font: 0.9rem;
+  }
+
+  .kiosk-container {
+    max-width: 100%;
+  }
+
+  .hg-theme-default.kiosk-hg .hg-row {
+    gap: 0.3rem !important;
+  }
+
+  .hg-theme-default.kiosk-hg .hg-button.hg-key-wide {
+    min-width: 3.8rem !important;
+    padding-inline: 0.55rem !important;
+    font-size: 0.72rem !important;
+  }
+
+  .hg-theme-default.kiosk-hg .hg-button.hg-key-space {
+    min-width: 8.5rem !important;
+  }
 }
 
 /* Gradients */

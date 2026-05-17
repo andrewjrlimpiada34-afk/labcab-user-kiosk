@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Keyboard from 'react-simple-keyboard';
 import 'react-simple-keyboard/build/css/index.css';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,10 +14,10 @@ interface KioskKeyboardProps {
   layoutType?: 'default' | 'numeric' | 'email';
 }
 
-export function KioskKeyboard({ 
-  visible, 
-  onInput, 
-  onEnter, 
+export function KioskKeyboard({
+  visible,
+  onInput,
+  onEnter,
   onClose,
   initialValue = "",
   layoutType = 'default'
@@ -33,55 +32,61 @@ export function KioskKeyboard({
   }, [visible, initialValue]);
 
   useEffect(() => {
-    if (layoutType === 'numeric') {
-      setLayoutName('numbers');
-    } else {
-      setLayoutName('default');
-    }
+    setLayoutName(layoutType === 'numeric' ? 'numbers' : 'default');
   }, [layoutType]);
 
   const onKeyPress = (button: string) => {
     if (button === "{shift}" || button === "{lock}") {
-      setLayoutName(layoutName === "default" ? "shift" : "default");
-    } else if (button === "{numbers}") {
+      setLayoutName((current) => current === "default" ? "shift" : "default");
+      return;
+    }
+
+    if (button === "{numbers}") {
       setLayoutName("numbers");
-    } else if (button === "{abc}") {
+      return;
+    }
+
+    if (button === "{abc}") {
       setLayoutName("default");
-    } else if (button === "{enter}") {
-      if (onEnter) onEnter();
+      return;
+    }
+
+    if (button === "{enter}" && onEnter) {
+      onEnter();
       onClose();
     }
-  };
-
-  const onChange = (input: string) => {
-    onInput(input);
   };
 
   return (
     <AnimatePresence>
       {visible && (
         <>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/10 z-[100]"
+            className="fixed inset-0 z-[100] bg-slate-950/20"
             onClick={onClose}
           />
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed bottom-0 left-0 right-0 z-[101]"
+            transition={{ type: "spring", damping: 28, stiffness: 220 }}
+            className="fixed bottom-0 left-0 right-0 z-[101] px-2 pb-2 sm:px-3 sm:pb-3 md:px-4 md:pb-4"
           >
-            <div className="bg-slate-200 p-2 shadow-2xl border-t border-slate-300">
-               <Keyboard
+            <div className="mx-auto w-full max-w-[980px] overflow-hidden rounded-[1.75rem] border border-slate-300/80 bg-slate-200/95 p-2 shadow-[0_-16px_40px_rgba(15,23,42,0.24)] backdrop-blur-sm md:rounded-[2rem] md:p-3">
+              <div className="mx-auto mb-2 h-1.5 w-20 rounded-full bg-slate-400/70 md:mb-3" />
+              <Keyboard
                 keyboardRef={(r) => (keyboard.current = r)}
                 layoutName={layoutName}
-                onChange={onChange}
+                onChange={onInput}
                 onKeyPress={onKeyPress}
-                theme={"hg-theme-default hg-layout-default"}
+                theme={"hg-theme-default hg-layout-default kiosk-hg"}
+                physicalKeyboardHighlight
+                syncInstanceInputs
+                preventMouseDownDefault
+                disableCaretPositioning
                 layout={{
                   default: [
                     "q w e r t y u i o p",
@@ -108,13 +113,23 @@ export function KioskKeyboard({
                   ]
                 }}
                 display={{
-                  "{shift}": "⇧",
-                  "{backspace}": "⌫",
+                  "{shift}": "SHIFT",
+                  "{backspace}": "BKSP",
                   "{enter}": "ENTER",
                   "{numbers}": "123",
                   "{abc}": "ABC",
                   "{space}": "SPACE"
                 }}
+                buttonTheme={[
+                  {
+                    class: "hg-key-wide",
+                    buttons: "{shift} {backspace} {numbers} {abc} {enter}"
+                  },
+                  {
+                    class: "hg-key-space",
+                    buttons: "{space}"
+                  }
+                ]}
               />
             </div>
           </motion.div>

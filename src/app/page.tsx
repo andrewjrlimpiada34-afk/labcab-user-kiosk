@@ -173,6 +173,7 @@ export default function Home() {
                         flex flex-col items-center justify-center gap-6
                         text-white shadow-2xl
                         transition-all
+                        [&_svg]:!h-36 [&_svg]:!w-36 md:[&_svg]:!h-40 md:[&_svg]:!w-40 lg:[&_svg]:!h-44 lg:[&_svg]:!w-44
                         active:scale-[0.98]
                         hover:brightness-110
                         hover:-translate-y-0.5
@@ -193,7 +194,7 @@ export default function Home() {
                         onPointerLeave={() => setPressedPath((current) => (current === btn.path ? null : current))}
                         className="flex h-full w-full flex-col items-center justify-center gap-5 rounded-[2.25rem] px-6 text-center"
                       >
-                        <btn.icon className="h-28 w-28 md:h-32 md:w-32 lg:h-36 lg:w-36" />
+                        <btn.icon />
 
                         <div className="space-y-2 text-center">
                           <span className="text-3xl font-black tracking-tight block">

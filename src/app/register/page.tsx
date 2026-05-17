@@ -134,12 +134,12 @@ export default function RegisterPage() {
           <motion.div key="type" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col items-center justify-center gap-12">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-700">Select Account Type</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
-              <Button variant="outline" className="h-64 md:h-96 rounded-[2.5rem] md:rounded-[3rem] flex flex-col gap-6 text-slate-700 border-4 hover:border-primary hover:bg-primary/5 shadow-xl transition-all active:scale-95" onClick={() => { setRole('teacher'); setStep('form'); }}>
-                <UserCog className="w-28 h-28 md:w-36 md:h-36 text-primary" />
+              <Button variant="outline" className="h-64 md:h-96 rounded-[2.5rem] md:rounded-[3rem] flex flex-col gap-6 text-slate-700 border-4 hover:border-primary hover:bg-primary/5 shadow-xl transition-all active:scale-95 [&_svg]:!h-36 [&_svg]:!w-36 md:[&_svg]:!h-44 md:[&_svg]:!w-44" onClick={() => { setRole('teacher'); setStep('form'); }}>
+                <UserCog className="text-primary" />
                 <span className="text-3xl md:text-4xl font-black">TEACHER</span>
               </Button>
-              <Button variant="outline" className="h-64 md:h-96 rounded-[2.5rem] md:rounded-[3rem] flex flex-col gap-6 text-slate-700 border-4 hover:border-secondary hover:bg-secondary/5 shadow-xl transition-all active:scale-95" onClick={() => { setRole('student'); setStep('form'); }}>
-                <GraduationCap className="w-28 h-28 md:w-36 md:h-36 text-secondary" />
+              <Button variant="outline" className="h-64 md:h-96 rounded-[2.5rem] md:rounded-[3rem] flex flex-col gap-6 text-slate-700 border-4 hover:border-secondary hover:bg-secondary/5 shadow-xl transition-all active:scale-95 [&_svg]:!h-36 [&_svg]:!w-36 md:[&_svg]:!h-44 md:[&_svg]:!w-44" onClick={() => { setRole('student'); setStep('form'); }}>
+                <GraduationCap className="text-secondary" />
                 <span className="text-3xl md:text-4xl font-black">STUDENT</span>
               </Button>
             </div>

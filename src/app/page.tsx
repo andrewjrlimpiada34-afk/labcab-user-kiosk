@@ -163,13 +163,20 @@ export default function Home() {
                         w-[320px]
                         h-[320px]
                         flex-none
+                        select-none
+                        touch-manipulation
                         rounded-[3rem]
                         flex flex-col items-center justify-center gap-6
                         text-white shadow-2xl
-                        transition-all active:scale-95
+                        transition-all
+                        active:scale-[0.98]
+                        hover:brightness-110
+                        hover:-translate-y-0.5
+                        active:brightness-95
                         border-none
                         ${btn.color}
-                        hover:brightness-110
+                        focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/30
+                        sm:pointer-events-auto
                       `}
                     >
                       <btn.icon className="w-20 h-20" />
@@ -185,6 +192,7 @@ export default function Home() {
                     </Button>
                   </motion.div>
                 ))}
+
 
               </div>
             </div>
